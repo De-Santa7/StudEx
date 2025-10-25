@@ -1,27 +1,24 @@
-// src/app/login/page.tsx
+// src/app/admin/signup/page.tsx
 "use client";
 
-import { Mail, Lock, Eye, EyeOff, Store } from "lucide-react";
+import { Shield, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authStore";
 
-export default function UserLogin() {
+export default function AdminSignup() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useAuth();
-  const router = useRouter();
+  const [message, setMessage] = useState("");
+  const router = useRouter(); // FIXED: was "const to useRouter()"
 
-  const handleLogin = (e: any) => {
+  const handleSignup = (e: any) => {
     e.preventDefault();
-    if (email && password) {
-      login({ email, name: email.split("@")[0] });
-      router.push("/");
-    } else {
-      setError("Please fill all fields");
-    }
+    localStorage.setItem("adminEmail", email);
+    localStorage.setItem("adminName", name);
+    setMessage("Admin created! Redirecting...");
+    setTimeout(() => router.push("/admin/login"), 2000);
   };
 
   return (
@@ -29,12 +26,28 @@ export default function UserLogin() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-teal-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <Store className="w-16 h-16 mx-auto mb-4" style={{ color: "#7C3AED" }} />
-            <h1 className="text-2xl font-bold" style={{ color: "#7C3AED" }}>Welcome Back</h1>
-            <p className="text-sm text-gray-600 mt-2">Login to StudEx</p>
+            <Shield className="w-16 h-16 mx-auto mb-4" style={{ color: "#7C3AED" }} />
+            <h1 className="text-2xl font-bold" style={{ color: "#7C3AED" }}>Create Admin</h1>
+            <p className="text-sm text-gray-600 mt-2">First-time platform setup</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: "#7C3AED" }}>
+                <User className="w-4 h-4 inline mr-1" />
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-purple-500"
+                style={{ borderColor: "#7C3AED" }}
+                required
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-2" style={{ color: "#7C3AED" }}>
                 <Mail className="w-4 h-4 inline mr-1" />
@@ -44,7 +57,7 @@ export default function UserLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@lasu.edu.ng"
+                placeholder="admin@studex.com"
                 className="w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-purple-500"
                 style={{ borderColor: "#7C3AED" }}
                 required
@@ -60,7 +73,7 @@ export default function UserLogin() {
                 type={showPass ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
+                placeholder="Create a strong password"
                 className="w-full p-3 pr-12 rounded-xl border focus:outline-none focus:ring-2 focus:ring-purple-500"
                 style={{ borderColor: "#7C3AED" }}
                 required
@@ -74,21 +87,20 @@ export default function UserLogin() {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+            {message && (
+              <p className="text-sm text-green-600 text-center">{message}</p>
+            )}
 
             <button
               type="submit"
               className="w-full py-4 rounded-2xl font-bold text-white mt-6 bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600 transition-all shadow-lg"
             >
-              Login
+              Create Admin Account
             </button>
           </form>
 
           <p className="text-xs text-center text-gray-500 mt-6">
-            Don’t have an account?{" "}
-            <a href="/signup" className="underline text-purple-600 font-medium">
-              Sign up
-            </a>
+            Already have access? <a href="/admin/login" className="underline text-purple-600">Login</a>
           </p>
         </div>
       </div>

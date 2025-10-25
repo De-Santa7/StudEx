@@ -1,14 +1,23 @@
 // src/app/account/page.tsx
 "use client";
 
-import { User, Package, Heart, Settings, HelpCircle, LogOut, ChevronRight } from "lucide-react";
+import { User, Package, Heart, Settings, HelpCircle, LogOut, ChevronRight, Store, Clock } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/authStore";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function AccountPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [sellerStatus, setSellerStatus] = useState<"none" | "pending" | "approved">("none");
+
+  useEffect(() => {
+    const pending = localStorage.getItem("isSellerPending") === "true";
+    const approved = localStorage.getItem("isSeller") === "true";
+    if (approved) setSellerStatus("approved");
+    else if (pending) setSellerStatus("pending");
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -35,6 +44,34 @@ export default function AccountPage() {
             <p className="text-sm" style={{ color: "#14B8A6" }}>{user?.email || "user@lasu.edu.ng"}</p>
           </div>
         </div>
+
+        {/* Seller Status: PENDING */}
+        {sellerStatus === "pending" && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center gap-3">
+            <Clock className="w-5 h-5" style={{ color: "#f59e0b" }} />
+            <div>
+              <p className="font-medium" style={{ color: "#7C3AED" }}>Seller Application Pending</p>
+              <p className="text-xs text-gray-600">We'll review your documents in 24-48 hours.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Seller Status: APPROVED */}
+        {sellerStatus === "approved" && (
+          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 mb-4 flex items-center gap-3">
+            <Store className="w-5 h-5" style={{ color: "#14B8A6" }} />
+            <div>
+              <p className="font-medium" style={{ color: "#7C3AED" }}>Verified Seller</p>
+              <p className="text-xs text-gray-600">You can now list products.</p>
+            </div>
+            <Link
+              href="/seller"  // FIXED: Was /seller/dashboard
+              className="ml-auto px-4 py-2 bg-teal-500 text-white rounded-full text-sm font-bold"
+            >
+              Dashboard
+            </Link>
+          </div>
+        )}
 
         {/* Menu */}
         <div className="space-y-2">
@@ -69,6 +106,27 @@ export default function AccountPage() {
             </div>
             <ChevronRight className="w-5 h-5" style={{ color: "#7C3AED" }} />
           </Link>
+
+          {/* Become a Seller */}
+          {sellerStatus === "none" && (
+            <div className="bg-gradient-to-r from-purple-600 to-teal-500 rounded-xl p-4 text-white mt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Store className="w-6 h-6" />
+                  <div>
+                    <p className="font-bold">Become a Seller</p>
+                    <p className="text-xs opacity-90">List products & earn</p>
+                  </div>
+                </div>
+                <Link
+                  href="/seller/onboarding"  // CORRECT
+                  className="bg-white text-purple-600 px-4 py-2 rounded-full text-sm font-bold shadow"
+                >
+                  Start Now
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         <button

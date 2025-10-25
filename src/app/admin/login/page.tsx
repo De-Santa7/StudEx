@@ -1,26 +1,26 @@
-// src/app/login/page.tsx
+// src/app/admin/login/page.tsx
 "use client";
 
-import { Mail, Lock, Eye, EyeOff, Store } from "lucide-react";
+import { Shield, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/authStore";
 
-export default function UserLogin() {
+export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
-  const router = useRouter();
+  const router = useRouter(); // CORRECT
 
   const handleLogin = (e: any) => {
     e.preventDefault();
-    if (email && password) {
-      login({ email, name: email.split("@")[0] });
-      router.push("/");
+
+    // Hardcoded admin credentials
+    if (email === "admin@studex.com" && password === "admin123") {
+      localStorage.setItem("isAdmin", "true");
+      router.push("/admin");
     } else {
-      setError("Please fill all fields");
+      setError("Invalid email or password");
     }
   };
 
@@ -29,9 +29,9 @@ export default function UserLogin() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-teal-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <Store className="w-16 h-16 mx-auto mb-4" style={{ color: "#7C3AED" }} />
-            <h1 className="text-2xl font-bold" style={{ color: "#7C3AED" }}>Welcome Back</h1>
-            <p className="text-sm text-gray-600 mt-2">Login to StudEx</p>
+            <Shield className="w-16 h-16 mx-auto mb-4" style={{ color: "#7C3AED" }} />
+            <h1 className="text-2xl font-bold" style={{ color: "#7C3AED" }}>Admin Login</h1>
+            <p className="text-sm text-gray-600 mt-2">Manage StudEx platform</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -44,7 +44,7 @@ export default function UserLogin() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@lasu.edu.ng"
+                placeholder="admin@studex.com"
                 className="w-full p-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-purple-500"
                 style={{ borderColor: "#7C3AED" }}
                 required
@@ -74,21 +74,20 @@ export default function UserLogin() {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
 
             <button
               type="submit"
               className="w-full py-4 rounded-2xl font-bold text-white mt-6 bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600 transition-all shadow-lg"
             >
-              Login
+              Login as Admin
             </button>
           </form>
 
           <p className="text-xs text-center text-gray-500 mt-6">
-            Don’t have an account?{" "}
-            <a href="/signup" className="underline text-purple-600 font-medium">
-              Sign up
-            </a>
+            Default: <strong>admin@studex.com</strong> / <strong>admin123</strong>
           </p>
         </div>
       </div>
