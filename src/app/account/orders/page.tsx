@@ -6,9 +6,20 @@ import { motion } from "framer-motion";
 import { Package, Truck, CheckCircle } from "lucide-react";
 import Image from "next/image";
 
+type Order = {
+  id: string;
+  date: string;
+  status: "ordered" | "shipped" | "delivered";
+  total: string;
+  product: {
+    name: string;
+    image: string;
+  };
+};
+
 export default function OrdersPage() {
   const router = useRouter();
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     // Mock data for demonstration
@@ -46,7 +57,7 @@ export default function OrdersPage() {
     ]);
   }, []);
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: "ordered" | "shipped" | "delivered") => {
     const colorMap = {
       ordered: "bg-yellow-100 text-yellow-700",
       shipped: "bg-blue-100 text-blue-700",
@@ -59,13 +70,14 @@ export default function OrdersPage() {
       delivered: CheckCircle,
     };
 
-    const Icon = iconMap[status] || Package;
+    const Icon = iconMap[status];
 
     return (
       <div
         className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${colorMap[status]}`}
       >
-        <Icon className="w-4 h-4" /> {status.charAt(0).toUpperCase() + status.slice(1)}
+        <Icon className="w-4 h-4" />{" "}
+        {status.charAt(0).toUpperCase() + status.slice(1)}
       </div>
     );
   };
@@ -91,7 +103,7 @@ export default function OrdersPage() {
             <motion.div
               key={order.id}
               className="bg-white p-4 rounded-xl shadow-sm border flex items-center gap-4 hover:shadow-md transition cursor-pointer"
-              onClick={() => router.push(`/account/orders/${order.id}`)} // CLICKABLE
+              onClick={() => router.push(`/account/orders/${order.id}`)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}

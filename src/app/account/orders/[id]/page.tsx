@@ -17,13 +17,31 @@ import Link from "next/link";
 export default function OrderDetails() {
   const { id } = useParams();
   const router = useRouter();
-  const [order, setOrder] = useState(null);
+
+  // ✅ Define proper type for the order
+  const [order, setOrder] = useState<{
+    id: string;
+    date: string;
+    status: string;
+    total: string;
+    products: {
+      id: string;
+      name: string;
+      price: string;
+      quantity: number;
+      image: string;
+    }[];
+    delivery: {
+      address: string;
+      expectedDate: string;
+    };
+  } | null>(null);
 
   useEffect(() => {
     // Mock order data for now
     setTimeout(() => {
       setOrder({
-        id,
+        id: String(id),
         date: "2025-10-20",
         status: "shipped",
         total: "₦75,000",
@@ -50,7 +68,7 @@ export default function OrderDetails() {
     { key: "delivered", label: "Delivered", icon: CheckCircle },
   ];
 
-  const getStatusColor = (step) => {
+  const getStatusColor = (step: string) => {
     if (!order) return "text-gray-400";
     const stepsOrder = ["ordered", "shipped", "delivered"];
     if (step === order.status) return "text-teal-500";
