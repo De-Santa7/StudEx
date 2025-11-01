@@ -1,4 +1,3 @@
-// src/app/products/[id]/page.tsx
 "use client";
 
 import { Heart, MessageCircle, Share2, ShoppingCart, Star, ChevronLeft } from "lucide-react";
@@ -10,7 +9,7 @@ export default function ProductPage() {
   const { id } = useParams();
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
-  // MOCK PRODUCT
+  // Mock product data
   const product = {
     id,
     name: "MacBook Pro 2021 (M1)",
@@ -25,21 +24,21 @@ export default function ProductPage() {
     inStock: true,
   };
 
-  // GENERATE WHATSAPP NUMBER **ONLY ON CLIENT**
+  // Generate random WhatsApp number on client
   useEffect(() => {
     const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000);
     setWhatsappNumber(`234${randomNumber}`);
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       {/* Top Bar */}
-      <div className="sticky top-0 bg-white z-40 border-b">
+      <div className="sticky top-0 z-50 bg-white border-b">
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="text-purple-600">
             <ChevronLeft className="w-6 h-6" />
           </Link>
-          <h1 className="text-lg font-bold" style={{ color: "#7C3AED" }}>Product</h1>
+          <h1 className="text-lg font-bold text-purple-700">Product</h1>
           <div className="flex gap-3">
             <button className="text-gray-600">
               <Share2 className="w-5 h-5" />
@@ -51,19 +50,15 @@ export default function ProductPage() {
         </div>
       </div>
 
-      <div className="p-4 pb-24">
-        {/* Image */}
+      <div className="p-4 pb-24 space-y-6">
+        {/* Product Image */}
         <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-64 mb-4" />
 
-        {/* Details */}
-        <h1 className="text-2xl font-bold mb-2" style={{ color: "#7C3AED" }}>
-          {product.name}
-        </h1>
+        {/* Product Info */}
+        <h1 className="text-2xl font-bold text-purple-700">{product.name}</h1>
 
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-3xl font-bold" style={{ color: "#7C3AED" }}>
-            {product.price}
-          </p>
+          <p className="text-3xl font-bold text-purple-700">{product.price}</p>
           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
             {product.condition}
           </span>
@@ -74,7 +69,7 @@ export default function ProductPage() {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`w-4 h-4 ${i < 4 ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+              className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
             />
           ))}
           <span className="text-sm text-gray-600 ml-1">
@@ -83,26 +78,25 @@ export default function ProductPage() {
         </div>
 
         {/* Description */}
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2" style={{ color: "#7C3AED" }}>Description</h3>
+        <div>
+          <h3 className="font-semibold mb-2 text-purple-700">Description</h3>
           <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
         </div>
 
-        {/* Seller */}
-        <div className="bg-surface rounded-xl p-4 mb-6">
-          <h3 className="font-semibold mb-2" style={{ color: "#7C3AED" }}>Seller</h3>
+        {/* Seller Info */}
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <h3 className="font-semibold mb-2 text-purple-700">Seller</h3>
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium">{product.seller}</p>
               <p className="text-sm text-gray-600">{product.hostel}</p>
             </div>
-            {/* Only render link when number is ready */}
             {whatsappNumber ? (
               <a
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-green-500 text-white p-3 rounded-full"
+                className="bg-green-500 text-white p-3 rounded-full hover:bg-green-600 transition"
               >
                 <MessageCircle className="w-5 h-5" />
               </a>
@@ -112,17 +106,16 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Action Buttons */}
         <div className="flex gap-3">
-          <button className="flex-1 py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-teal-500">
-            <ShoppingCart className="w-5 h-5" />
-            Add to Cart
+          <button className="flex-1 py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-teal-500 hover:opacity-90 transition">
+            <ShoppingCart className="w-5 h-5" /> Add to Cart
           </button>
-          <button className="px-6 py-4 rounded-xl border-2 font-bold" style={{ borderColor: "#7C3AED", color: "#7C3AED" }}>
+          <button className="flex-1 py-4 rounded-xl border-2 font-bold text-purple-700 border-purple-700 hover:bg-purple-50 transition">
             Buy Now
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
