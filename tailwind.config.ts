@@ -1,7 +1,7 @@
-// tailwind.config.ts
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,13 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#7C3AED",   // PURPLE
-        accent: "#14B8A6",    // TEAL
-        background: "#FFFFFF",
-        surface: "#F9FAFB",
-        border: "#E5E7EB",
-        text: "#1F2937",
-        muted: "#6B7280",
+        background: "hsl(var(--background) / <alpha-value>)",
+        foreground: "hsl(var(--foreground) / <alpha-value>)",
+        primary: "hsl(var(--primary) / <alpha-value>)",
+        accent: "hsl(var(--accent) / <alpha-value>)",
+        border: "hsl(var(--border) / <alpha-value>)",
+        muted: "hsl(var(--muted) / <alpha-value>)",
       },
       borderRadius: {
         xl: "1rem",

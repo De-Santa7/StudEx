@@ -1,7 +1,7 @@
 // src/app/seller/payouts/page.tsx
 "use client";
 
-import { Landmark, DollarSign, ChevronLeft, CheckCircle } from "lucide-react";  // ← Landmark instead of Bank
+import { Landmark, DollarSign, ChevronLeft, CheckCircle, Pencil } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
@@ -12,6 +12,7 @@ export default function SellerPayouts() {
     accountName: "",
   });
   const [saved, setSaved] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     const savedBank = localStorage.getItem("sellerBank");
@@ -29,13 +30,16 @@ export default function SellerPayouts() {
     e.preventDefault();
     localStorage.setItem("sellerBank", JSON.stringify(bank));
     setSaved(true);
+    setEditing(false);
     alert("Bank details saved!");
   };
 
   return (
     <>
+      {/* Top Bar */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="flex items-center justify-between p-4">
+          {/* FIXED: Back to /seller */}
           <Link href="/seller" className="text-purple-600">
             <ChevronLeft className="w-6 h-6" />
           </Link>
@@ -45,6 +49,7 @@ export default function SellerPayouts() {
       </div>
 
       <div className="p-4 pb-24 space-y-6">
+        {/* Summary */}
         <div className="bg-gradient-to-r from-purple-600 to-teal-500 rounded-2xl p-6 text-white">
           <p className="text-sm opacity-90">Total Earned</p>
           <p className="text-3xl font-bold">₦184,000</p>
@@ -54,18 +59,25 @@ export default function SellerPayouts() {
           </div>
         </div>
 
-        <div className="bg-surface rounded-2xl p-6">
+        {/* Bank Section */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border">
           <div className="flex items-center gap-2 mb-4">
-            <Landmark className="w-5 h-5" style={{ color: "#7C3AED" }} />  {/* ← Now correct */}
+            <Landmark className="w-5 h-5" style={{ color: "#7C3AED" }} />
             <h2 className="text-lg font-bold" style={{ color: "#7C3AED" }}>Bank Details</h2>
             {saved && <CheckCircle className="w-5 h-5 text-green-500 ml-auto" />}
           </div>
 
-          {saved ? (
-            <div className="space-y-2 text-sm">
+          {saved && !editing ? (
+            <div className="space-y-3 text-sm">
               <p><span className="text-gray-600">Bank:</span> {bank.bankName}</p>
-              <p><span className="text-gray-600">Account:</span> {bank.accountName}</p>
-              <p><span className="text-gray-600">Number:</span> {bank.accountNumber}</p>
+              <p><span className="text-gray-600">Account Name:</span> {bank.accountName}</p>
+              <p><span className="text-gray-600">Account Number:</span> {bank.accountNumber}</p>
+              <button
+                onClick={() => setEditing(true)}
+                className="mt-4 flex items-center gap-2 text-purple-600 font-semibold"
+              >
+                <Pencil className="w-4 h-4" /> Edit Bank Info
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSave} className="space-y-3">

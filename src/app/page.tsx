@@ -1,6 +1,7 @@
 // src/app/page.tsx
 "use client";
-import { Search, Heart, LogIn, UserPlus, LogOut } from "lucide-react";
+
+import { Search, Heart, LogIn, UserPlus, LogOut, Package, Zap } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/authStore";
 
@@ -26,7 +27,7 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="flex gap-3">
-              {/* LOGIN = BOLD PURPLE */}
+              {/* LOGIN = BOLD PURPLE PILL */}
               <Link href="/login">
                 <button className="flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow-md hover:shadow-lg">
                   <LogIn className="w-4 h-4 text-white" />
@@ -34,9 +35,9 @@ export default function HomePage() {
                 </button>
               </Link>
 
-              {/* SIGN UP = BOLD TEAL + DARK TEXT */}
+              {/* SIGN UP = WHITE + PURPLE + CURVED RECTANGLE */}
               <Link href="/signup">
-                <button className="flex items-center gap-1.5 px-5 py-2.5 bg-accent text-primary rounded-full text-sm font-bold hover:bg-accent/90 transition-all shadow-md hover:shadow-lg">
+                <button className="flex items-center gap-1.5 px-5 py-2.5 bg-white text-primary rounded-xl text-sm font-bold border border-primary hover:bg-primary/5 transition-all shadow hover:shadow-lg">
                   <UserPlus className="w-4 h-4 text-primary" />
                   Sign Up
                 </button>
@@ -47,14 +48,17 @@ export default function HomePage() {
       </div>
 
       <div className="p-4 space-y-6 pb-24">
-        {/* HERO BANNER */}
-        <div className="bg-gradient-to-r from-purple-600 to-teal-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-          <h2 className="text-2xl font-bold">Campus Style & Snacks</h2>
-          <p className="text-sm mt-1">Fashion, Beauty & Food — Delivered Fast</p>
-          <button className="mt-4 bg-white text-purple-600 px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all hover:scale-105">
-            Shop Now
-          </button>
-        </div>
+        {/* HERO BANNER — CLICKABLE */}
+        <Link href="/categories">
+          <div className="bg-gradient-to-r from-purple-600 to-teal-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer active:scale-95">
+            <h2 className="text-2xl font-bold">Campus Style & Snacks</h2>
+            <p className="text-sm mt-1">Fashion, Beauty & Food — Delivered Fast</p>
+            <button className="mt-4 bg-white text-purple-600 px-6 py-2 rounded-full font-medium shadow hover:shadow-lg transition-all hover:scale-105 inline-flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Shop Now
+            </button>
+          </div>
+        </Link>
 
         {/* Categories */}
         <div>
@@ -82,27 +86,37 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Flash Deals */}
+        {/* Flash Deals — CLICKABLE SECTION */}
         <div>
           <div className="flex justify-between mb-3">
-            <h3 className="text-lg font-semibold">Flash Deals</h3>
-            <button className="text-primary text-sm font-medium hover:underline">See All</button>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Zap className="w-5 h-5 text-yellow-500" />
+              Flash Deals
+            </h3>
+            <Link href="/deals" className="text-primary text-sm font-medium hover:underline">
+              See All →
+            </Link>
           </div>
           <div className="flex space-x-3 overflow-x-auto hide-scrollbar pb-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-surface p-4 rounded-xl min-w-[140px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/30"
-              >
-                <div className="relative">
-                  <div className="bg-gray-200 border-2 border-dashed rounded-xl w-full h-28" />
-                  <button className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:scale-110 transition-transform">
-                    <Heart className="w-4 h-4 text-primary hover:fill-accent hover:text-accent transition-colors" />
-                  </button>
+              <Link key={i} href={`/deals/${i}`}>
+                <div className="bg-surface p-4 rounded-xl min-w-[140px] hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/30 active:scale-95">
+                  <div className="relative">
+                    <div className="bg-gradient-to-br from-yellow-100 to-orange-100 border-2 border-dashed rounded-xl w-full h-28 flex items-center justify-center">
+                      <span className="text-3xl">Deal {i}</span>
+                    </div>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:scale-110 transition-transform"
+                    >
+                      <Heart className="w-4 h-4 text-primary hover:fill-red-500 hover:text-red-500 transition-colors" />
+                    </button>
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-primary">Flash Item {i}</p>
+                  <p className="text-xs text-primary/70 line-through">₦3,500</p>
+                  <p className="text-sm font-bold text-red-500">₦2,500</p>
                 </div>
-                <p className="text-sm font-medium mt-2 text-primary">Item {i}</p>
-                <p className="text-xs text-primary/70">₦2,500</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -118,6 +132,17 @@ export default function HomePage() {
           >
             {isLoggedIn ? "Logout" : "Test Login"}
           </button>
+        </div>
+      </div>
+
+      {/* Bottom Nav */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
+        <div className="flex justify-around py-2">
+          <div className="text-primary font-bold"><span className="text-xs">Home</span></div>
+          <Link href="/categories" className="text-primary/60"><span className="text-xs">Categories</span></Link>
+          <Link href="/cart" className="text-primary/60"><span className="text-xs">Cart</span></Link>
+          <Link href="/wishlist" className="text-primary/60"><span className="text-xs">Wishlist</span></Link>
+          <Link href="/account" className="text-primary/60"><span className="text-xs">Account</span></Link>
         </div>
       </div>
     </>

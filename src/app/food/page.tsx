@@ -1,25 +1,25 @@
-// src/app/fashion/page.tsx
+// src/app/food/page.tsx
 "use client";
 
-import { Search, Heart, Filter, X } from "lucide-react";
+import { Search, Heart, Filter, X, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useWishlist } from "@/lib/wishlistStore";
 
-export default function FashionPage() {
+export default function FoodPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const { addItem: addToWishlist } = useWishlist();
 
-  // REAL PRODUCTS
+  // REAL FOOD PRODUCTS
   const products = [
-    { id: 1, name: "Nike Air Max", price: 45000, category: "Shoes", img: "Sneakers", rating: 4.8 },
-    { id: 2, name: "Denim Jacket", price: 18000, category: "Clothing", img: "Jacket", rating: 4.5 },
-    { id: 3, name: "Gold Chain", price: 8000, category: "Jewelry", img: "Necklace", rating: 4.9 },
-    { id: 4, name: "Laptop Bag", price: 12000, category: "Accessories", img: "Bag", rating: 4.6 },
-    { id: 5, name: "Sneaker Cleaner", price: 3500, category: "Care", img: "Bottle", rating: 4.7 },
-    { id: 6, name: "Sunglasses", price: 9000, category: "Eyewear", img: "Glasses", rating: 4.8 },
+    { id: 1, name: "Jollof Rice", price: 2500, category: "Rice", img: "Rice Bowl", rating: 4.9 },
+    { id: 2, name: "Suya (Beef)", price: 3000, category: "Grilled", img: "Skewers", rating: 4.8 },
+    { id: 3, name: "Coca-Cola", price: 500, category: "Drinks", img: "Bottle", rating: 4.7 },
+    { id: 4, name: "Pizza Slice", price: 1500, category: "Fast Food", img: "Pizza", rating: 4.6 },
+    { id: 5, name: "Plantain Chips", price: 800, category: "Snacks", img: "Chips", rating: 4.5 },
+    { id: 6, name: "Zobo Drink", price: 700, category: "Drinks", img: "Glass", rating: 4.8 },
   ];
 
   // Filter by search
@@ -44,8 +44,8 @@ export default function FashionPage() {
       {/* Top Bar */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="flex items-center justify-between p-4">
-          <Link href="/" className="text-primary font-bold text-xl" style={{ color: "#7C3AED" }}>
-            StudEx
+          <Link href="/" className="text-primary">
+            <ChevronLeft className="w-6 h-6" style={{ color: "#7C3AED" }} />
           </Link>
           <div className="flex gap-3">
             <button
@@ -70,7 +70,7 @@ export default function FashionPage() {
               <Search className="w-5 h-5" style={{ color: "#7C3AED" }} />
               <input
                 type="text"
-                placeholder="Search fashion..."
+                placeholder="Search food..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 py-2 outline-none"
@@ -86,13 +86,13 @@ export default function FashionPage() {
       </div>
 
       <div className="p-4 pb-24">
-        <h1 className="text-2xl font-bold mb-4" style={{ color: "#7C3AED" }}>Fashion & Beauty</h1>
+        <h1 className="text-2xl font-bold mb-4" style={{ color: "#7C3AED" }}>Food & Snacks</h1>
 
         <div className="grid grid-cols-2 gap-4">
           {filteredProducts.map((p) => (
-            <Link key={p.id} href={`/fashion/${p.id}`} className="block">
+            <Link key={p.id} href={`/food/${p.id}`} className="block">
               <div className="bg-surface rounded-xl overflow-hidden hover:shadow-lg transition-all cursor-pointer relative group">
-                <div className="bg-gradient-to-br from-purple-100 to-pink-100 h-48 flex items-center justify-center text-6xl">
+                <div className="bg-gradient-to-br from-orange-100 to-red-100 h-48 flex items-center justify-center text-6xl">
                   {p.img}
                 </div>
 
@@ -105,7 +105,7 @@ export default function FashionPage() {
                   </div>
                 </div>
 
-                {/* WISHLIST HEART */}
+                {/* HEART BUTTON */}
                 <button
                   onClick={(e) => handleWishlist(e, p)}
                   className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
@@ -143,7 +143,7 @@ export default function FashionPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
         <div className="flex justify-around py-2">
           <Link href="/" className="text-primary/60"><span className="text-xs">Home</span></Link>
-          <div className="text-primary font-bold"><span className="text-xs">Fashion</span></div>
+          <div className="text-primary font-bold"><span className="text-xs">Food</span></div>
           <Link href="/cart" className="text-primary/60"><span className="text-xs">Cart</span></Link>
           <Link href="/wishlist" className="text-primary/60"><span className="text-xs">Wishlist</span></Link>
           <Link href="/account" className="text-primary/60"><span className="text-xs">Account</span></Link>

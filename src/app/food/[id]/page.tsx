@@ -1,4 +1,4 @@
-// src/app/fashion/[id]/page.tsx
+// src/app/food/[id]/page.tsx
 "use client";
 
 import { ChevronLeft, Heart, ShoppingCart, Star, MapPin, ChevronRight, MessageCircle } from "lucide-react";
@@ -8,50 +8,122 @@ import { useState, useEffect } from "react";
 import { useCart } from "@/lib/cartStore";
 import { useWishlist } from "@/lib/wishlistStore";
 
-const fashionProducts = {
+// MOCK FOOD DATA — With Phone Numbers
+const foodProducts = {
   1: {
     id: 1,
-    name: "Nike Air Max",
-    price: 45000,
-    img: "Sneakers",
-    rating: 4.8,
-    reviews: 312,
-    description: "Premium Nike Air Max 270 sneakers. Cushioned comfort with bold style.",
+    name: "Jollof Rice",
+    price: 2500,
+    img: "Rice Bowl",
+    rating: 4.9,
+    reviews: 128,
+    description: "Authentic Nigerian jollof rice with chicken, served with plantain and coleslaw.",
     seller: {
-      name: "Sneaker Vault",
-      avatar: "S",
-      campus: "LASU Gate",
-      rating: 4.9,
-      totalSales: 1240,
+      name: "Mama's Kitchen",
+      avatar: "M",
+      campus: "LASU Main Campus",
+      rating: 4.8,
+      totalSales: 892,
       verified: true,
       phone: "+2348012345678",
     },
   },
   2: {
     id: 2,
-    name: "Denim Jacket",
-    price: 18000,
-    img: "Jacket",
-    rating: 4.5,
-    reviews: 89,
-    description: "Classic blue denim jacket. Durable, stylish, perfect for campus drip.",
+    name: "Suya (Beef)",
+    price: 3000,
+    img: "Skewers",
+    rating: 4.8,
+    reviews: 95,
+    description: "Spicy grilled beef suya with onions and special spice mix.",
     seller: {
-      name: "Campus Threads",
-      avatar: "C",
-      campus: "Faculty of Arts",
-      rating: 4.7,
-      totalSales: 567,
+      name: "Suya King",
+      avatar: "S",
+      campus: "LASU Gate",
+      rating: 4.9,
+      totalSales: 1203,
       verified: true,
       phone: "+2348123456789",
     },
   },
-  // ... rest of products
+  3: {
+    id: 3,
+    name: "Coca-Cola",
+    price: 500,
+    img: "Bottle",
+    rating: 4.7,
+    reviews: 210,
+    description: "Chilled 50cl bottle of Coca-Cola.",
+    seller: {
+      name: "Campus Mart",
+      avatar: "C",
+      campus: "LASU Hostels",
+      rating: 4.6,
+      totalSales: 3200,
+      verified: true,
+      phone: "+2348034567890",
+    },
+  },
+  4: {
+    id: 4,
+    name: "Pizza Slice",
+    price: 1500,
+    img: "Pizza",
+    rating: 4.6,
+    reviews: 67,
+    description: "Freshly baked pepperoni pizza slice.",
+    seller: {
+      name: "Pizza Hub",
+      avatar: "P",
+      campus: "Faculty of Science",
+      rating: 4.7,
+      totalSales: 450,
+      verified: true,
+      phone: "+2348076543210",
+    },
+  },
+  5: {
+    id: 5,
+    name: "Plantain Chips",
+    price: 800,
+    img: "Chips",
+    rating: 4.5,
+    reviews: 89,
+    description: "Crispy fried plantain chips with pepper.",
+    seller: {
+      name: "Snack Queen",
+      avatar: "S",
+      campus: "Student Union",
+      rating: 4.5,
+      totalSales: 680,
+      verified: false,
+      phone: "+2348098765432",
+    },
+  },
+  6: {
+    id: 6,
+    name: "Zobo Drink",
+    price: 700,
+    img: "Glass",
+    rating: 4.8,
+    reviews: 102,
+    description: "Fresh hibiscus tea with pineapple and ginger.",
+    seller: {
+      name: "Healthy Vibes",
+      avatar: "H",
+      campus: "Medical Center",
+      rating: 4.9,
+      totalSales: 510,
+      verified: true,
+      phone: "+2348055512345",
+    },
+  },
 };
 
-export default function FashionDetailPage() {
+export default function FoodDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const product = fashionProducts[id as string];
+  const product = foodProducts[id as string];
   const { addItem } = useCart();
   const { items: wishlist, addItem: addToWishlist, removeItem } = useWishlist();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -62,6 +134,7 @@ export default function FashionDetailPage() {
     }
   }, [product, wishlist]);
 
+  // WHATSAPP CHAT FUNCTION
   const openWhatsApp = () => {
     if (!product.seller.phone) {
       alert("Seller phone number not available");
@@ -123,7 +196,7 @@ export default function FashionDetailPage() {
 
       <div className="p-4 pb-32 space-y-6 overflow-x-hidden">
         {/* Product Image */}
-        <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl h-64 flex items-center justify-center text-9xl">
+        <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl h-64 flex items-center justify-center text-9xl">
           {product.img}
         </div>
 
@@ -147,7 +220,7 @@ export default function FashionDetailPage() {
 
           {/* BUY NOW BUTTON — UNDER PRICE */}
           <div className="mt-3">
-            <Link href={`/checkout?product=${product.id}&type=fashion`}>
+            <Link href={`/checkout?product=${product.id}&type=food`}>
               <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all">
                 Buy Now
               </button>
