@@ -1,20 +1,30 @@
+// src/app/admin/orders/page.tsx
 "use client";
 
 import Link from "next/link";
-import { Package, User, DollarSign, CheckCircle, Clock, XCircle, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Package,
+  User,
+  DollarSign,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Search,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    // In a real app, fetch from API
     const saved = localStorage.getItem("studexOrders");
     if (saved) {
       setOrders(JSON.parse(saved));
     } else {
-      // Mock data
       setOrders([
         {
           id: "ORD12345",
@@ -55,7 +65,7 @@ export default function AdminOrders() {
       o.seller.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
         return "text-green-700 bg-green-100";
@@ -68,7 +78,7 @@ export default function AdminOrders() {
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
         return <CheckCircle className="w-4 h-4" />;
@@ -83,11 +93,21 @@ export default function AdminOrders() {
 
   return (
     <>
+      {/* ===== Top Bar ===== */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold" style={{ color: "#7C3AED" }}>
-            All Orders
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center text-purple-600 hover:text-purple-700"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold" style={{ color: "#7C3AED" }}>
+              All Orders
+            </h1>
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
             <input
@@ -101,6 +121,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* ===== Orders List ===== */}
       <div className="p-4 space-y-4">
         {filtered.length > 0 ? (
           filtered.map((order) => (

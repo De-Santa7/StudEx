@@ -1,12 +1,29 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle, Phone, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function HelpPage() {
+  const router = useRouter();
+
   return (
     <main className="min-h-screen bg-white text-gray-800 px-6 py-10">
+      {/* ====== Back Button ====== */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium"
+        >
+          <ArrowLeft size={18} />
+          Back
+        </button>
+        <h1 className="text-lg font-bold text-purple-600 ml-auto">
+          Help & Support
+        </h1>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -17,7 +34,8 @@ export default function HelpPage() {
         <div className="text-center mb-10">
           <h1 className="text-3xl font-bold text-purple-600">Help & Support</h1>
           <p className="text-gray-500 mt-2">
-            Need assistance? We're here to help you with anything related to your StudEx account.
+            Need assistance? We're here to help you with anything related to
+            your StudEx account.
           </p>
         </div>
 

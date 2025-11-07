@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Package, Truck, CheckCircle } from "lucide-react";
+import { Package, Truck, CheckCircle, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
 type Order = {
@@ -85,7 +85,13 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b z-40 p-4">
+      <div className="sticky top-0 bg-white border-b z-40 p-4 flex items-center gap-3">
+        <button
+          onClick={() => router.back()}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 text-purple-600" />
+        </button>
         <h1 className="text-lg font-bold text-purple-600">My Orders</h1>
       </div>
 

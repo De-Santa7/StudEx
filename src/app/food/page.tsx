@@ -4,9 +4,11 @@
 import { Search, Heart, Filter, X, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useWishlist } from "@/lib/wishlistStore";
 
 export default function FoodPage() {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -44,9 +46,14 @@ export default function FoodPage() {
       {/* Top Bar */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="flex items-center justify-between p-4">
-          <Link href="/" className="text-primary">
+          {/* Back Button */}
+          <button
+            onClick={() => router.back()}
+            className="p-2 bg-surface rounded-full shadow-sm hover:shadow transition-shadow"
+          >
             <ChevronLeft className="w-6 h-6" style={{ color: "#7C3AED" }} />
-          </Link>
+          </button>
+
           <div className="flex gap-3">
             <button
               onClick={() => setSearchOpen(true)}

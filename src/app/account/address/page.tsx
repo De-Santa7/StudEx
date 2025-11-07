@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Lock,
   Save,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,20 @@ export default function AddressBookPage() {
 
   return (
     <main className="min-h-screen bg-white text-gray-800 px-6 py-10">
+      {/* ====== Back Button ====== */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium"
+        >
+          <ArrowLeft size={18} />
+          Back
+        </button>
+        <h1 className="text-lg font-bold text-purple-600 ml-auto">
+          My Profile
+        </h1>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

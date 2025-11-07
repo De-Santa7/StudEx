@@ -1,12 +1,14 @@
 // src/app/fashion/page.tsx
 "use client";
 
-import { Search, Heart, Filter, X } from "lucide-react";
+import { Search, Heart, Filter, X, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useWishlist } from "@/lib/wishlistStore";
+import { useRouter } from "next/navigation";
 
 export default function FashionPage() {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -44,9 +46,17 @@ export default function FashionPage() {
       {/* Top Bar */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="flex items-center justify-between p-4">
-          <Link href="/" className="text-primary font-bold text-xl" style={{ color: "#7C3AED" }}>
-            StudEx
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" style={{ color: "#7C3AED" }} />
+            </button>
+            <Link href="/" className="text-primary font-bold text-xl" style={{ color: "#7C3AED" }}>
+              StudEx
+            </Link>
+          </div>
           <div className="flex gap-3">
             <button
               onClick={() => setSearchOpen(true)}

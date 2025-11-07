@@ -1,23 +1,41 @@
 "use client";
 
-import { User, Mail, ShieldCheck, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Mail, ShieldCheck, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    // In real app: fetch from backend
     const saved = localStorage.getItem("studexUsers");
     if (saved) {
       setUsers(JSON.parse(saved));
     } else {
-      // Mock users
       setUsers([
-        { id: 1, name: "Chinedu Okeke", email: "chinedu@lasu.edu.ng", role: "buyer", joined: "2025-04-01" },
-        { id: 2, name: "Amaka Bello", email: "amaka@lasu.edu.ng", role: "seller", joined: "2025-03-20" },
-        { id: 3, name: "Tunde Lawal", email: "tunde@lasu.edu.ng", role: "buyer", joined: "2025-05-05" },
+        {
+          id: 1,
+          name: "Chinedu Okeke",
+          email: "chinedu@lasu.edu.ng",
+          role: "buyer",
+          joined: "2025-04-01",
+        },
+        {
+          id: 2,
+          name: "Amaka Bello",
+          email: "amaka@lasu.edu.ng",
+          role: "seller",
+          joined: "2025-03-20",
+        },
+        {
+          id: 3,
+          name: "Tunde Lawal",
+          email: "tunde@lasu.edu.ng",
+          role: "buyer",
+          joined: "2025-05-05",
+        },
       ]);
     }
   }, []);
@@ -30,11 +48,19 @@ export default function AdminUsers() {
 
   return (
     <>
+      {/* ===== Top Bar ===== */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="p-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold" style={{ color: "#7C3AED" }}>
-            All Users
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center text-purple-600 hover:text-purple-700"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-purple-600">All Users</h1>
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
             <input
@@ -48,13 +74,15 @@ export default function AdminUsers() {
         </div>
       </div>
 
+      {/* ===== Users List ===== */}
       <div className="p-4">
         {filtered.length > 0 ? (
           <div className="space-y-4">
             {filtered.map((user) => (
               <div
                 key={user.id}
-                className="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center border"
+                onClick={() => router.push(`/admin/users/${user.id}`)}
+                className="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center border hover:shadow-md hover:bg-gray-50 transition cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="bg-purple-100 text-purple-600 w-10 h-10 flex items-center justify-center rounded-full font-bold">

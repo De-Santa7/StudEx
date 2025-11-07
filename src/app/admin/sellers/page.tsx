@@ -1,7 +1,7 @@
 // src/app/admin/sellers/page.tsx
 "use client";
 
-import { Store, CheckCircle, Clock, Search, User, Eye, Users } from "lucide-react";
+import { Store, CheckCircle, Clock, Search, User, Eye, Users, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -71,10 +71,20 @@ export default function AdminSellers() {
       {/* Top Bar */}
       <div className="sticky top-0 bg-white z-40 border-b">
         <div className="p-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: "#7C3AED" }}>
-            <Users className="w-6 h-6" />
-            Sellers
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-full hover:bg-gray-100 transition"
+              title="Go back"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: "#7C3AED" }}>
+              <Users className="w-6 h-6" />
+              Sellers
+            </h1>
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
             <input
@@ -99,13 +109,13 @@ export default function AdminSellers() {
           </div>
           <div className="bg-surface rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-green-600">
-              {sellers.filter(s => s.status === "verified").length}
+              {sellers.filter((s) => s.status === "verified").length}
             </p>
             <p className="text-xs text-gray-600">Verified</p>
           </div>
           <div className="bg-surface rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-yellow-600">
-              {sellers.filter(s => s.status === "pending").length}
+              {sellers.filter((s) => s.status === "pending").length}
             </p>
             <p className="text-xs text-gray-600">Pending</p>
           </div>
@@ -165,11 +175,21 @@ export default function AdminSellers() {
       {/* Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
         <div className="flex justify-around py-2">
-          <Link href="/admin" className="text-primary/60"><span className="text-xs">Dashboard</span></Link>
-          <div className="text-primary font-bold"><span className="text-xs">Sellers</span></div>
-          <Link href="/admin/orders" className="text-primary/60"><span className="text-xs">Orders</span></Link>
-          <Link href="/admin/products" className="text-primary/60"><span className="text-xs">Products</span></Link>
-          <Link href="/admin/settings" className="text-primary/60"><span className="text-xs">Settings</span></Link>
+          <Link href="/admin" className="text-primary/60">
+            <span className="text-xs">Dashboard</span>
+          </Link>
+          <div className="text-primary font-bold">
+            <span className="text-xs">Sellers</span>
+          </div>
+          <Link href="/admin/orders" className="text-primary/60">
+            <span className="text-xs">Orders</span>
+          </Link>
+          <Link href="/admin/products" className="text-primary/60">
+            <span className="text-xs">Products</span>
+          </Link>
+          <Link href="/admin/settings" className="text-primary/60">
+            <span className="text-xs">Settings</span>
+          </Link>
         </div>
       </div>
     </>
