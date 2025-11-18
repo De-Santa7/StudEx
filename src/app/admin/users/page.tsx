@@ -1,119 +1,184 @@
+// src/app/admin/users/page.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Mail, ShieldCheck, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Search, Mail, ShieldCheck, User, Users, Ban, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
   const router = useRouter();
+  const [search, setSearch] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("studexUsers");
     if (saved) {
       setUsers(JSON.parse(saved));
     } else {
+      // PAU-only mock users
       setUsers([
         {
           id: 1,
           name: "Chinedu Okeke",
-          email: "chinedu@lasu.edu.ng",
+          email: "chinedu@pau.edu.ng",
+          matric: "PAU20237890",
           role: "buyer",
-          joined: "2025-04-01",
+          joined: "Apr 1, 2025",
+          orders: 23,
+          status: "active",
         },
         {
           id: 2,
           name: "Amaka Bello",
-          email: "amaka@lasu.edu.ng",
+          email: "amaka@pau.edu.ng",
+          matric: "PAU20230012",
           role: "seller",
-          joined: "2025-03-20",
+          joined: "Mar 20, 2025",
+          orders: 89,
+          status: "active",
         },
         {
           id: 3,
-          name: "Tunde Lawal",
-          email: "tunde@lasu.edu.ng",
+          name: "Victor Osahon",
+          email: "victor@pau.edu.ng",
+          matric: "PAU20231234",
+          role: "seller",
+          joined: "May 2, 2025",
+          orders: 45,
+          status: "active",
+        },
+        {
+          id: 4,
+          name: "Chioma Eze",
+          email: "chioma@pau.edu.ng",
+          matric: "PAU20237891",
           role: "buyer",
-          joined: "2025-05-05",
+          joined: "Jun 10, 2025",
+          orders: 12,
+          status: "active",
         },
       ]);
     }
   }, []);
 
-  const filtered = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = users.filter((u) =>
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    u.matric?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalUsers = users.length;
+  const sellersCount = users.filter(u => u.role === "seller").length;
+  const buyersCount = users.filter(u => u.role === "buyer").length;
 
   return (
     <>
-      {/* ===== Top Bar ===== */}
-      <div className="sticky top-0 bg-white z-40 border-b">
-        <div className="p-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center text-purple-600 hover:text-purple-700"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <h1 className="text-xl font-bold text-purple-600">All Users</h1>
-          </div>
+      {/* TOP BAR */}
+      <motion.div
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 z-50 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 border-b border-white/10 backdrop-blur-xl"
+      >
+        <div className="flex items-center justify-between px-5 py-4">
+          <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-xl transition">
+            <ArrowLeft className="w-6 h-6 text-white" />
+          </button>
+          <h1 className="text-xl font-black text-white">All Users</h1>
+          <div className="w-10" />
+        </div>
 
+        {/* Search */}
+        <div className="px-5 pb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search users..."
-              className="pl-9 pr-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+              placeholder="Search name, email, matric..."
+              className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-xl rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 text-sm"
             />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* ===== Users List ===== */}
-      <div className="p-4">
-        {filtered.length > 0 ? (
-          <div className="space-y-4">
-            {filtered.map((user) => (
-              <div
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-5 pt-4 pb-32">
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
+            <Users className="w-8 h-8 mx-auto text-purple-400 mb-1" />
+            <p className="text-2xl font-black text-white">{totalUsers}</p>
+            <p className="text-xs text-white/60">Total Users</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="bg-emerald-500/10 rounded-2xl p-4 text-center border border-emerald-500/30">
+            <ShieldCheck className="w-8 h-8 mx-auto text-emerald-400 mb-1" />
+            <p className="text-2xl font-black text-white">{sellersCount}</p>
+            <p className="text-xs text-white/60">Sellers</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="bg-blue-500/10 rounded-2xl p-4 text-center border border-blue-500/30">
+            <User className="w-8 h-8 mx-auto text-blue-400 mb-1" />
+            <p className="text-2xl font-black text-white">{buyersCount}</p>
+            <p className="text-xs text-white/60">Buyers</p>
+          </motion.div>
+        </div>
+
+        {/* Users List */}
+        <div className="space-y-4">
+          {filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <Users className="w-16 h-16 mx-auto text-white/20 mb-3" />
+              <p className="text-white/60">No users found</p>
+            </div>
+          ) : (
+            filtered.map((user, i) => (
+              <motion.div
                 key={user.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => router.push(`/admin/users/${user.id}`)}
-                className="bg-white rounded-xl p-4 shadow-sm flex justify-between items-center border hover:shadow-md hover:bg-gray-50 transition cursor-pointer"
+                className="bg-white/5 backdrop-blur-xl rounded-2xl p-5 border border-white/10 hover:border-purple-500/50 transition-all cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 text-purple-600 w-10 h-10 flex items-center justify-center rounded-full font-bold">
-                    {user.name.charAt(0)}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-teal-600 rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-lg">
+                      {user.name.split(" ").map((n: string) => n[0]).join("")}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-lg">{user.name}</h3>
+                      <p className="text-purple-300 text-sm flex items-center gap-1.5">
+                        <Mail className="w-4 h-4" /> {user.email}
+                      </p>
+                      <p className="text-white/50 text-xs font-mono mt-1">{user.matric || "—"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-800">{user.name}</p>
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <Mail className="w-3 h-3" /> {user.email}
-                    </p>
-                    <p className="text-xs text-gray-500">Joined: {user.joined}</p>
+
+                  <div className="text-right">
+                    <div className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 mb-2 ${
+                      user.role === "seller"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50"
+                        : "bg-blue-500/20 text-blue-300 border border-blue-500/50"
+                    }`}>
+                      {user.role === "seller" ? <ShieldCheck className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                      {user.role.toUpperCase()}
+                    </div>
+                    <p className="text-white/60 text-xs">Joined {user.joined}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {user.role === "seller" ? (
-                    <span className="flex items-center gap-1 text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium">
-                      <ShieldCheck className="w-3 h-3" /> Seller
-                    </span>
-                  ) : (
-                    <span className="text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium">
-                      Buyer
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500 mt-10">No users found</p>
-        )}
+                {user.role === "seller" && (
+                  <div className="mt-4 pt-4 border-t border-white/10 flex justify-between text-sm">
+                    <span className="text-white/60">Total Orders</span>
+                    <span className="text-emerald-400 font-bold">{user.orders}</span>
+                  </div>
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
       </div>
     </>
   );
