@@ -2,50 +2,47 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface CartItem {
+type CartItem = {
   id: number;
-  name: string;
+  title: string;
   price: number;
-  qty: number;
   img: string;
-}
+  quantity: number;
+};
 
-interface CartState {
-  items: CartItem[];
-  addItem: (item: Omit<CartItem, "qty">) => void;
-  removeItem: (id: number) => void;
-  updateQty: (id: number, qty: number) => void;
-  clearCart: () => void;
-  getTotal: () => number;
-}
+type CartStore = {
+  cart: CartItem[];
+  addToCart: (item: Omit<CartItem, "quantity">) => void;
+  removeFromCart: (id: number) => void;
+  updateQuantity: (id: number, quantity: number) => void;
+  clearCart: () => void; // ← MUST BE HERE
+};
 
-// EXPORT THIS LINE
-export const useCart = create<CartState>()(
+export const useCartStore = create<CartStore>()(
   persist(
-    (set, get) => ({
-      items: [],
-      addItem: (item) =>
+    (set) => ({
+      cart: [],
+      addToCart: (item) =>
         set((state) => {
-          const existing = state.items.find((i) => i.id === item.id);
+          const existing = state.cart.find((i) => i.id === item.id);
           if (existing) {
             return {
-              items: state.items.map((i) =>
-                i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+              cart: state.cart.map((i) =>
+                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
               ),
             };
           }
-          return { items: [...state.items, { ...item, qty: 1 }] };
+          return { cart: [...state.cart, { ...item, quantity: 1 }] };
         }),
-      removeItem: (id) =>
-        set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-      updateQty: (id, qty) =>
+      removeFromCart: (id) =>
+        set((state) => ({ cart: state.cart.filter((i) => i.id !== id) })),
+      updateQuantity: (id, quantity) =>
         set((state) => ({
-          items: qty === 0
-            ? state.items.filter((i) => I.id !== id)
-            : state.items.map((i) => (i.id === id ? { ...i, qty } : i)),
+          cart: state.cart.map((i) =>
+            i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i
+          ),
         })),
-      clearCart: () => set({ items: [] }),
-      getTotal: () => get().items.reduce((sum, i) => sum + i.price * i.qty, 0),
+      clearCart: () => set({ cart: [] }), // ← THIS WAS MISSING
     }),
     {
       name: "studex-cart",

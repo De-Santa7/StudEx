@@ -1,89 +1,108 @@
 // src/app/wishlist/page.tsx
 "use client";
 
-import { Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Heart, Package } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { useWishlist } from "@/lib/wishlistStore";
-import { useCart } from "@/lib/cartStore";
+import { motion } from "framer-motion";
+import { useWishlistStore } from "@/lib/wishlistStore";
+import { useCartStore } from "@/lib/cartStore";
 
 export default function WishlistPage() {
-  const { items, removeItem } = useWishlist();
-  const { addItem: addToCart } = useCart();
+  const { wishlist, removeFromWishlist, clearWishlist } = useWishlistStore();
+  const addToCart = useCartStore((state) => state.addToCart);
+
+  if (wishlist.length === 0) {
+    return (
+      <div className="p-8 text-center">
+        <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <p className="text-black/70 text-lg">Your wishlist is empty</p>
+        <Link href="/deals">
+          <button className="mt-4 text-primary font-medium underline">Browse Deals</button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="sticky top-0 bg-white z-40 border-b">
+      {/* TOP BAR */}
+      <div className="sticky top-0 bg-white z-40 border-b shadow-sm">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold" style={{ color: "#7C3AED" }}>
-            Wishlist ({items.length})
-          </h1>
-          <Heart
-            className="w-6 h-6"
-            style={{
-              color: "#7C3AED",
-              fill: items.length > 0 ? "#7C3AED" : "none",
-            }}
-          />
+          <Link href="/" className="text-black">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <h1 className="text-xl font-bold text-black">Wishlist ({wishlist.length})</h1>
+          <button onClick={clearWishlist} className="text-red-500 text-sm font-medium">
+            Clear
+          </button>
         </div>
       </div>
 
-      <div className="p-4 pb-24">
-        {items.length === 0 ? (
-          <div className="text-center mt-10">
-            <Heart className="w-16 h-16 mx-auto mb-4 opacity-20" style={{ color: "#7C3AED" }} />
-            <p style={{ color: "#7C3AED" }}>Your wishlist is empty</p>
-            <Link href="/fashion" className="text-sm underline mt-2" style={{ color: "#14B8A6" }}>
-              Explore Fashion
-            </Link>
-          </div>
-        ) : (
-          items.map((item) => (
-            <Link
-              href={`/fashion/${item.id}`}
-              key={item.id}
-              className="block bg-surface rounded-xl p-4 mb-3 hover:shadow-md transition-shadow"
-            >
-              <div className="flex gap-3 items-center">
-                <div className="bg-gradient-to-br from-pink-100 to-purple-100 w-20 h-20 rounded-xl flex items-center justify-center text-3xl">
-                  {item.img}
+      {/* WISHLIST ITEMS — CLICKABLE */}
+      <div className="p-4 pb-32 space-y-4">
+        {wishlist.map((item) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-surface rounded-xl overflow-hidden shadow-sm"
+          >
+            <Link href={`/deals/${item.id}`}>
+              <div className="flex gap-3 p-4 cursor-pointer hover:bg-white/50 transition-colors">
+                {/* IMAGE */}
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                  <Image
+                    src={`/images/${item.img}`}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
+
+                {/* DETAILS */}
                 <div className="flex-1">
-                  <p className="font-medium" style={{ color: "#7C3AED" }}>{item.name}</p>
-                  <p className="text-sm" style={{ color: "#14B8A6" }}>₦{item.price.toLocaleString()}</p>
+                  <p className="font-medium text-black line-clamp-2">{item.title}</p>
+                  <p className="text-lg font-bold text-red-500">₦{item.price.toLocaleString()}</p>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    addToCart({ id: item.id, name: item.name, price: item.price, img: item.img });
-                  }}
-                  className="p-3 bg-accent text-white rounded-full shadow"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    removeItem(item.id);
-                  }}
-                  className="p-2"
-                >
-                  <Trash2 className="w-5 h-5" style={{ color: "#ef4444" }} />
-                </button>
               </div>
             </Link>
-          ))
-        )}
+
+            {/* ACTIONS — BELOW CARD */}
+            <div className="flex justify-between items-center px-4 pb-3">
+              <button
+                onClick={() => {
+                  addToCart({ id: item.id, title: item.title, price: item.price, img: item.img });
+                  removeFromWishlist(item.id);
+                }}
+                className="bg-primary text-white px-5 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 shadow hover:shadow-md transition-shadow"
+              >
+                <Package className="w-4 h-4" />
+                Add to Cart
+              </button>
+
+              <button
+                onClick={() => removeFromWishlist(item.id)}
+                className="p-2 text-red-500"
+              >
+                <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+              </button>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Bottom Nav */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50">
+      {/* BOTTOM NAV */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
         <div className="flex justify-around py-2">
-          <Link href="/" className="text-primary/60"><span className="text-xs">Home</span></Link>
-          <Link href="/categories" className="text-primary/60"><span className="text-xs">Categories</span></Link>
-          <Link href="/cart" className="text-primary/60"><span className="text-xs">Cart</span></Link>
-          <div className="text-primary font-bold"><span className="text-xs">Wishlist</span></div>
-          <Link href="/account" className="text-primary/60"><span className="text-xs">Account</span></Link>
+          <Link href="/" className="text-black/60"><span className="text-xs">Home</span></Link>
+          <Link href="/categories" className="text-black/60"><span className="text-xs">Categories</span></Link>
+          <Link href="/cart" className="text-black/60"><span className="text-xs">Cart</span></Link>
+          <Link href="/wishlist" className="text-primary font-bold"><span className="text-xs">Wishlist</span></Link>
+          <Link href="/account" className="text-black/60"><span className="text-xs">Account</span></Link>
         </div>
       </div>
     </>

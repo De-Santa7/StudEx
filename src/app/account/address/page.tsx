@@ -1,6 +1,7 @@
+// src/app/account/profile/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -18,84 +19,176 @@ import {
   Lock,
   Save,
   ArrowLeft,
+  Camera,
+  X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Image from "next/image";
+import Link from "next/link";
 
-export default function AddressBookPage() {
+interface Profile {
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  level: string;
+  school: string;
+  campus: string;
+  avatar: string;
+}
+
+export default function ProfilePage() {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<Profile>({
     name: "John Doe",
-    email: "johndoe@school.edu.ng",
+    email: "johndoe@pau.edu.ng",  // ← PAU EMAIL
     phone: "+234 801 234 5678",
     department: "Computer Science",
     level: "400 Level",
-    school: "University of Nigeria, Nsukka",
-    campus: "Main Campus",
+    school: "Pan-Atlantic University",  // ← PAU
+    campus: "Lekki Campus",  // ← PAU MAIN CAMPUS
+    avatar: "",
   });
+
+  // Load from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("userProfile");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setProfile({
+        ...profile,
+        ...parsed,
+        school: "Pan-Atlantic University",
+        campus: parsed.campus || "Lekki Campus",
+      });
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfile({ ...profile, [name]: value });
   };
 
-  const toggleEdit = () => setIsEditing(!isEditing);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const saveProfile = () => {
-    setIsEditing(false);
-    alert("✅ Profile updated successfully!");
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setProfile(prev => ({ ...prev, avatar: dataUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
-  return (
-    <main className="min-h-screen bg-white text-gray-800 px-6 py-10">
-      {/* ====== Back Button ====== */}
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1 text-purple-600 hover:text-purple-800 font-medium"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
-        <h1 className="text-lg font-bold text-purple-600 ml-auto">
-          My Profile
-        </h1>
-      </div>
+  const removeAvatar = () => {
+    setProfile(prev => ({ ...prev, avatar: "" }));
+  };
 
+  const saveProfile = () => {
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+    setIsEditing(false);
+  };
+
+  const toggleEdit = () => setIsEditing(!isEditing);
+
+  const fadeInUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } };
+  const cardHover = { whileHover: { y: -4, scale: 1.02 }, whileTap: { scale: 0.98 } };
+
+  return (
+    <>
+      {/* TOP BAR — BIG LOGO */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-3xl mx-auto"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b border-white/20 shadow-sm"
       >
-        {/* ===== Profile Header ===== */}
-        <div className="flex flex-col items-center gap-4 mb-10">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-teal-500 flex items-center justify-center text-white text-4xl font-semibold shadow-md">
-              {profile.name[0]}
+        <div className="flex items-center justify-between p-4">
+          <button
+            onClick={() => router.back()}
+            className="text-purple-600 hover:bg-purple-50 p-2 rounded-full transition-all"
+          >
+            <ArrowLeft className="w-7 h-7" />
+          </button>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/images/logo-1.jpg"
+              alt="StudEx Logo"
+              width={160}
+              height={50}
+              className="h-11 w-auto object-contain"
+              priority
+            />
+          </Link>
+          <h1 className="text-xl font-black bg-gradient-to-r from-purple-600 to-teal-500 bg-clip-text text-transparent">
+            My Profile
+          </h1>
+        </div>
+      </motion.div>
+
+      <div className="p-6 pb-32 space-y-8">
+        {/* PROFILE HEADER */}
+        <motion.div {...fadeInUp} className="text-center">
+          <div className="relative inline-block">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-purple-100 to-teal-100 shadow-xl">
+              {profile.avatar ? (
+                <Image
+                  src={profile.avatar}
+                  alt="Profile"
+                  width={128}
+                  height={128}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-5xl font-black text-purple-600">
+                  {profile.name[0]}
+                </div>
+              )}
             </div>
-            <button
-              onClick={toggleEdit}
-              className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition"
-            >
-              <Edit3 size={16} />
-            </button>
+
+            {isEditing && (
+              <label className="absolute bottom-0 right-0 bg-purple-600 text-white p-3 rounded-full cursor-pointer shadow-lg hover:bg-purple-700 transition-all">
+                <Camera className="w-5 h-5" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </label>
+            )}
+
+            {profile.avatar && isEditing && (
+              <button
+                onClick={removeAvatar}
+                className="absolute top-0 right-0 bg-red-500 text-white p-2 rounded-full shadow-lg hover:bg-red-600 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          <h2 className="text-2xl font-bold text-purple-600">{profile.name}</h2>
-          <p className="text-gray-500 text-sm flex items-center gap-1">
-            Verified Student <CheckCircle2 size={14} className="text-teal-500" />
+          <h2 className="text-2xl font-black text-gray-800 mt-4">{profile.name}</h2>
+          <p className="text-sm text-gray-600 flex items-center justify-center gap-1 mt-1">
+            Verified PAU Student <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </p>
-        </div>
+        </motion.div>
 
-        {/* ===== Editable Profile Info ===== */}
-        <div className="border border-gray-200 rounded-lg p-6 shadow-sm bg-gray-50">
-          <h3 className="text-lg font-semibold text-purple-600 mb-4">
+        {/* PERSONAL INFO — GLASS CARD */}
+        <motion.div {...fadeInUp} className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/30">
+          <h3 className="text-lg font-black text-gray-800 mb-5 flex items-center justify-between">
             Personal Information
+            {!isEditing && (
+              <button
+                onClick={toggleEdit}
+                className="text-purple-600 hover:bg-purple-50 p-2 rounded-full transition-all"
+              >
+                <Edit3 className="w-5 h-5" />
+              </button>
+            )}
           </h3>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
             {[
               { label: "Full Name", name: "name", icon: User },
               { label: "Student Email", name: "email", icon: Mail },
@@ -103,96 +196,131 @@ export default function AddressBookPage() {
               { label: "Department", name: "department", icon: Book },
               { label: "Level", name: "level", icon: Layers },
             ].map(({ label, name, icon: Icon }) => (
-              <div key={name} className="flex items-center gap-3">
-                <Icon size={18} className="text-teal-500" />
-                {isEditing ? (
-                  <Input
-                    name={name}
-                    value={profile[name as keyof typeof profile]}
-                    onChange={handleChange}
-                    className="border-gray-300 focus:ring-2 focus:ring-teal-500 w-full"
-                  />
-                ) : (
-                  <p className="font-medium w-full">
-                    {profile[name as keyof typeof profile]}
-                  </p>
-                )}
+              <div key={name} className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-teal-50 rounded-xl flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600">{label}</p>
+                  {isEditing ? (
+                    <input
+                      name={name}
+                      value={profile[name as keyof Profile]}
+                      onChange={handleChange}
+                      className="w-full mt-1 p-3 rounded-xl border-2 focus:outline-none focus:ring-0 transition-all"
+                      style={{ borderColor: profile[name as keyof Profile] ? "#7C3AED" : "#d1d5db" }}
+                      {...(name === "email" ? { readOnly: true, style: { backgroundColor: "#f3f4f6", borderColor: "#9CA3AF" } } : {})}
+                    />
+                  ) : (
+                    <p className="font-bold text-gray-800 mt-1">{profile[name as keyof Profile]}</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
-        {/* ===== Student Details ===== */}
-        <div className="border border-gray-200 rounded-lg p-6 shadow-sm mt-6 bg-gray-50">
-          <h3 className="text-lg font-semibold text-purple-600 mb-4">
-            Student Details
-          </h3>
+        {/* STUDENT DETAILS */}
+        <motion.div {...fadeInUp} className="bg-white/70 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/30">
+          <h3 className="text-lg font-black text-gray-800 mb-5">Student Details</h3>
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <School size={18} className="text-teal-500" />
-              <p className="font-medium">{profile.school}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl flex items-center justify-center">
+                <School className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">School</p>
+                <p className="font-bold text-gray-800">Pan-Atlantic University</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Layers size={18} className="text-teal-500" />
-              <p className="font-medium">{profile.campus}</p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl flex items-center justify-center">
+                <Layers className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Campus</p>
+                <p className="font-bold text-gray-800">{profile.campus}</p>
+              </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ===== Marketplace Stats ===== */}
-        <div className="grid grid-cols-3 gap-4 mt-8 text-center">
-          <div className="border border-gray-200 rounded-lg p-4 hover:bg-purple-50 transition">
-            <Store className="mx-auto text-purple-600 mb-2" size={20} />
-            <h4 className="font-semibold text-gray-700">12</h4>
-            <p className="text-xs text-gray-500">Items Sold</p>
-          </div>
-          <div className="border border-gray-200 rounded-lg p-4 hover:bg-teal-50 transition">
-            <ShoppingBag className="mx-auto text-teal-600 mb-2" size={20} />
-            <h4 className="font-semibold text-gray-700">5</h4>
-            <p className="text-xs text-gray-500">Bought</p>
-          </div>
-          <div className="border border-gray-200 rounded-lg p-4 hover:bg-purple-50 transition">
-            <Heart className="mx-auto text-purple-600 mb-2" size={20} />
-            <h4 className="font-semibold text-gray-700">8</h4>
-            <p className="text-xs text-gray-500">Wishlist</p>
-          </div>
-        </div>
+        {/* MARKETPLACE STATS */}
+        <motion.div {...fadeInUp} className="grid grid-cols-3 gap-4">
+          <motion.div {...cardHover} className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 text-center shadow-md">
+            <Store className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+            <p className="text-2xl font-black text-gray-800">12</p>
+            <p className="text-xs text-gray-600">Sold</p>
+          </motion.div>
+          <motion.div {...cardHover} className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 text-center shadow-md">
+            <ShoppingBag className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-2xl font-black text-gray-800">5</p>
+            <p className="text-xs text-gray-600">Bought</p>
+          </motion.div>
+          <motion.div {...cardHover} className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-5 text-center shadow-md">
+            <Heart className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+            <p className="text-2xl font-black text-gray-800">8</p>
+            <p className="text-xs text-gray-600">Wishlist</p>
+          </motion.div>
+        </motion.div>
 
-        {/* ===== Action Buttons ===== */}
-        <div className="mt-8 space-y-3">
+        {/* ACTION BUTTONS */}
+        <motion.div {...fadeInUp} className="space-y-4">
           {isEditing ? (
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={saveProfile}
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold flex items-center justify-center gap-2"
+              className="w-full py-5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3"
             >
-              <Save size={16} />
+              <Save className="w-5 h-5" />
               Save Changes
-            </Button>
+            </motion.button>
           ) : (
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={toggleEdit}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center justify-center gap-2"
+              className="w-full py-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3"
             >
-              <Edit3 size={16} />
+              <Edit3 className="w-5 h-5" />
               Edit Profile
-            </Button>
+            </motion.button>
           )}
 
-          <Button
-            variant="outline"
-            onClick={() => router.push("/account/address/change-password")}
-            className="w-full border border-red-500 text-red-600 hover:bg-red-50 font-semibold flex items-center justify-center gap-2"
-          >
-            <Lock size={16} />
-            Change Password
-          </Button>
-        </div>
+          <Link href="/account/change-password" className="block">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-5 bg-white text-red-600 rounded-2xl font-black text-lg shadow-lg border-2 border-red-200 flex items-center justify-center gap-3"
+            >
+              <Lock className="w-5 h-5" />
+              Change Password
+            </motion.button>
+          </Link>
+        </motion.div>
 
-        {/* ===== Footer Info ===== */}
-        <div className="mt-10 border-t pt-6 text-center text-gray-500 text-sm">
-          Member since 2025 • Campus: UNN • Version 1.0.0
+        {/* FOOTER */}
+        <motion.div {...fadeInUp} className="text-center text-xs text-gray-500 mt-8">
+          <p>Member since 2025 • Campus: PAU • Version 1.0.0</p>
+        </motion.div>
+      </div>
+
+      {/* BOTTOM NAV */}
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/20 z-50 shadow-2xl"
+      >
+        <div className="flex justify-around py-3">
+          <Link href="/" className="text-gray-500"><span className="text-xs">Home</span></Link>
+          <Link href="/categories" className="text-gray-500"><span className="text-xs">Shop</span></Link>
+          <Link href="/cart" className="text-gray-500"><span className="text-xs">Cart</span></Link>
+          <Link href="/wishlist" className="text-gray-500"><span className="text-xs">Wishlist</span></Link>
+          <div className="text-teal-600 font-black"><span className="text-xs">Account</span></div>
         </div>
       </motion.div>
-    </main>
+    </>
   );
 }
