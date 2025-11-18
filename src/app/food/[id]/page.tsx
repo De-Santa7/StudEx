@@ -5,8 +5,8 @@ import { ChevronLeft, Heart, ShoppingCart, Star, MapPin, ChevronRight, MessageCi
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { useCart } from "@/lib/cartStore";
-import { useWishlist } from "@/lib/wishlistStore";
+import { useCartStore } from "@/lib/cartStore";
+import { useWishlistStore } from "@/lib/wishlistStore";
 
 // MOCK FOOD DATA — With Phone Numbers
 const foodProducts = {
@@ -124,19 +124,23 @@ export default function FoodDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const product = foodProducts[id as string];
-  const { addItem } = useCart();
-  const { items: wishlist, addItem: addToWishlist, removeItem } = useWishlist();
+
+  const addItem = useCartStore((state) => state.addToCart);
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const addToWishlist = useWishlistStore((state) => state.addToWishlist);
+  const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
+
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
-    if (product && wishlist.find((i) => i.id === product.id)) {
+    if (product && wishlistItems.find((i) => i.id === product.id)) {
       setIsWishlisted(true);
     }
-  }, [product, wishlist]);
+  }, [product, wishlistItems]);
 
   // WHATSAPP CHAT FUNCTION
   const openWhatsApp = () => {
-    if (!product.seller.phone) {
+    if (!product?.seller.phone) {
       alert("Seller phone number not available");
       return;
     }
@@ -169,7 +173,7 @@ export default function FoodDetailPage() {
 
   const toggleWishlist = () => {
     if (isWishlisted) {
-      removeItem(product.id);
+      removeFromWishlist(product.id);
     } else {
       addToWishlist({
         id: product.id,
