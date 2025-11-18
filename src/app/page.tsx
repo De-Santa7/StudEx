@@ -1,12 +1,11 @@
-// src/app/page.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, LogIn, UserPlus, Package, Zap, ArrowRight, Plus, Heart, Scissors, Shirt, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/lib/authStore";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useAuth } from "@/lib/authStore";
 import { useCartStore } from "@/lib/cartStore";
 import { useWishlistStore } from "@/lib/wishlistStore";
 
@@ -15,8 +14,11 @@ export default function HomePage() {
   const addToCart = useCartStore((state) => state.addToCart);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
 
-  const [toast, setToast] = useState("");
+  // ✅ Mounted check to prevent hydration errors
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
+  const [toast, setToast] = useState("");
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(""), 2000);
@@ -63,14 +65,7 @@ export default function HomePage() {
       >
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/images/logo-1.jpg"
-              alt="StudEx Logo"
-              width={140}
-              height={40}
-              className="h-10 w-auto object-contain"
-              priority
-            />
+            <Image src="/images/logo-1.jpg" alt="StudEx Logo" width={140} height={40} className="h-10 w-auto object-contain" priority />
           </Link>
 
           {isLoggedIn ? (
@@ -90,7 +85,7 @@ export default function HomePage() {
                 </motion.button>
               </Link>
               <Link href="/signup">
-                <motion.button {...buttonHover} className="flex items-center gap-1.5 ആpx-5 py-2.5 bg-white text-primary rounded-xl text-sm font-bold border border-primary hover:bg-primary/5 transition-all shadow hover:shadow-lg">
+                <motion.button {...buttonHover} className="flex items-center gap-1.5 px-5 py-2.5 bg-white text-primary rounded-xl text-sm font-bold border border-primary hover:bg-primary/5 transition-all shadow hover:shadow-lg">
                   <UserPlus className="w-4 h-4 text-primary" /> Sign Up
                 </motion.button>
               </Link>
@@ -99,16 +94,12 @@ export default function HomePage() {
         </div>
       </motion.div>
 
-      {/* MAIN CONTENT — ORIGINAL SPACING PRESERVED */}
+      {/* MAIN CONTENT */}
       <div className="p-4 space-y-6 pb-24">
-        {/* HERO — TAGLINE LOCKED */}
+        {/* HERO */}
         <motion.div {...fadeInUp}>
           <Link href="/categories">
-            <motion.div
-              {...cardHover}
-              className="relative rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden h-48 bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500"
-              whileHover={{ scale: 1.01 }}
-            >
+            <motion.div {...cardHover} className="relative rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden h-48 bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500">
               <div className="relative z-10 h-full flex flex-col justify-end">
                 <motion.h2 initial={{ x: -20 }} whileInView={{ x: 0 }} className="text-2xl font-bold drop-shadow-2xl">
                   The Amazon for Campus Hustlers
@@ -116,10 +107,7 @@ export default function HomePage() {
                 <motion.p initial={{ x: -20 }} whileInView={{ x: 0 }} transition={{ delay: 0.1 }} className="text-sm mt-1 text-white/95 drop-shadow-xl">
                   Food in 15 mins. Services in 60.
                 </motion.p>
-                <motion.button
-                  {...buttonHover}
-                  className="mt-4 bg-white text-purple-600 px-6 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 w-fit"
-                >
+                <motion.button {...buttonHover} className="mt-4 bg-white text-purple-600 px-6 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 w-fit">
                   <Package className="w-4 h-4" /> Get Started
                 </motion.button>
               </div>
@@ -127,34 +115,19 @@ export default function HomePage() {
           </Link>
         </motion.div>
 
-        {/* CAMPUS SERVICES — HORIZONTAL SCROLL (NEW) */}
+        {/* CAMPUS SERVICES */}
         <motion.div {...fadeInUp}>
           <h3 className="text-lg font-bold text-black mb-3 flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
             Campus Services
           </h3>
-
           <div className="flex space-x-3 overflow-x-auto hide-scrollbar pb-2">
             {campusServices.map((service, i) => (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className="min-w-[140px]"
-              >
+              <motion.div key={service.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} className="min-w-[140px]">
                 <Link href={service.href}>
-                  <motion.div
-                    {...cardHover}
-                    className={`bg-gradient-to-br ${service.color} p-4 rounded-xl text-center shadow-md border border-transparent ${service.hover} transition-all duration-300 cursor-pointer`}
-                  >
+                  <motion.div {...cardHover} className={`bg-gradient-to-br ${service.color} p-4 rounded-xl text-center shadow-md border border-transparent ${service.hover} transition-all duration-300 cursor-pointer`}>
                     <div className="relative w-full h-28 rounded-xl overflow-hidden mb-2">
-                      <Image
-                        src={`/images/${service.img}`}
-                        alt={service.title}
-                        fill
-                        className="object-cover hover:scale-105 transition-transform duration-300"
-                      />
+                      <Image src={`/images/${service.img}`} alt={service.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
                     </div>
                     <div className="flex items-center justify-center gap-1">
                       <service.icon className="w-4 h-4 text-primary" />
@@ -170,10 +143,7 @@ export default function HomePage() {
         {/* SEE MORE CATEGORIES */}
         <motion.div {...fadeInUp} className="flex justify-center">
           <Link href="/categories">
-            <motion.button
-              whileHover={{ x: 4 }}
-              className="flex items-center gap-2 text-black font-medium text-sm hover:underline"
-            >
+            <motion.button whileHover={{ x: 4 }} className="flex items-center gap-2 text-black font-medium text-sm hover:underline">
               See More Categories <ArrowRight className="w-4 h-4 text-black" />
             </motion.button>
           </Link>
@@ -195,14 +165,12 @@ export default function HomePage() {
             {foodDeals.map((deal, i) => (
               <motion.div key={deal.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }}>
                 <Link href={`/deals/${deal.id}`}>
-                  <motion.div
-                    {...cardHover}
-                    className="bg-surface p-4 rounded-xl min-w-[140px] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/30 relative pb-8"
-                  >
+                  <motion.div {...cardHover} className="bg-surface p-4 rounded-xl min-w-[140px] hover:shadow-md transition-all duration-300 cursor-pointer border border-transparent hover:border-primary/30 relative pb-8">
                     <div className="relative w-full h-28 rounded-xl overflow-hidden">
                       <Image src={`/images/${deal.img}`} alt={deal.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
                     </div>
 
+                    {/* ADD TO CART BUTTON */}
                     <motion.button
                       onClick={(e) => {
                         e.preventDefault();
@@ -217,12 +185,13 @@ export default function HomePage() {
                       <Plus className="w-4 h-4 text-primary" />
                     </motion.button>
 
+                    {/* WISHLIST BUTTON — ✅ Hydration-safe */}
                     <motion.button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         const item = { id: deal.id, title: deal.title, price: deal.newPrice, img: deal.img };
-                        if (isInWishlist(deal.id)) {
+                        if (mounted && isInWishlist(deal.id)) {
                           removeFromWishlist(deal.id);
                           showToast("Removed from Wishlist!");
                         } else {
@@ -236,7 +205,7 @@ export default function HomePage() {
                     >
                       <Heart
                         className={`w-4 h-4 transition-all ${
-                          isInWishlist(deal.id) ? "fill-red-500 text-red-500" : "text-gray-400"
+                          mounted && isInWishlist(deal.id) ? "fill-red-500 text-red-500" : "text-gray-400"
                         }`}
                       />
                     </motion.button>
@@ -256,39 +225,20 @@ export default function HomePage() {
         {/* TEMP: Login Toggle */}
         <motion.div {...fadeInUp} className="p-4 bg-surface rounded-xl text-center">
           <p className="text-sm text-black/70 mb-2">{isLoggedIn ? "You are logged in" : "Not logged in"}</p>
-          <motion.button
-            {...buttonHover}
-            onClick={isLoggedIn ? logout : login}
-            className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow hover:shadow-lg"
-          >
+          <motion.button {...buttonHover} onClick={isLoggedIn ? logout : login} className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow hover:shadow-lg">
             {isLoggedIn ? "Logout" : "Test Login"}
           </motion.button>
         </motion.div>
       </div>
 
       {/* BOTTOM NAV */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg"
-      >
+      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
         <div className="flex justify-around py-2">
-          <Link href="/" className="text-primary font-bold">
-            <span className="text-xs">Home</span>
-          </Link>
-          <Link href="/categories" className="text-black/60">
-            <motion.div whileHover={{ y: -2 }} className="text-xs">Categories</motion.div>
-          </Link>
-          <Link href="/cart" className="text-black/60">
-            <motion.div whileHover={{ y: -2 }} className="text-xs">Cart</motion.div>
-          </Link>
-          <Link href="/wishlist" className="text-black/60">
-            <motion.div whileHover={{ y: -2 }} className="text-xs">Wishlist</motion.div>
-          </Link>
-          <Link href="/account" className="text-black/60">
-            <motion.div whileHover={{ y: -2 }} className="text-xs">Account</motion.div>
-          </Link>
+          <Link href="/" className="text-primary font-bold"><span className="text-xs">Home</span></Link>
+          <Link href="/categories" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Categories</motion.div></Link>
+          <Link href="/cart" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Cart</motion.div></Link>
+          <Link href="/wishlist" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Wishlist</motion.div></Link>
+          <Link href="/account" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Account</motion.div></Link>
         </div>
       </motion.div>
     </>

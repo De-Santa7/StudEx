@@ -15,13 +15,14 @@ type CartStore = {
   addToCart: (item: Omit<CartItem, "quantity">) => void;
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
-  clearCart: () => void; // ← MUST BE HERE
+  clearCart: () => void;
 };
 
-export const useCartStore = create<CartStore>()(
+export const useCart = create<CartStore>()(
   persist(
     (set) => ({
       cart: [],
+
       addToCart: (item) =>
         set((state) => {
           const existing = state.cart.find((i) => i.id === item.id);
@@ -34,18 +35,26 @@ export const useCartStore = create<CartStore>()(
           }
           return { cart: [...state.cart, { ...item, quantity: 1 }] };
         }),
+
       removeFromCart: (id) =>
-        set((state) => ({ cart: state.cart.filter((i) => i.id !== id) })),
+        set((state) => ({
+          cart: state.cart.filter((i) => i.id !== id),
+        })),
+
       updateQuantity: (id, quantity) =>
         set((state) => ({
           cart: state.cart.map((i) =>
             i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i
           ),
         })),
-      clearCart: () => set({ cart: [] }), // ← THIS WAS MISSING
+
+      clearCart: () => set({ cart: [] }),
     }),
     {
       name: "studex-cart",
     }
   )
 );
+
+// 🔥 Backward compatibility export
+export const useCartStore = useCart;

@@ -1,4 +1,3 @@
-// src/app/wishlist/page.tsx
 "use client";
 
 import { Heart, Package } from "lucide-react";
@@ -12,7 +11,10 @@ export default function WishlistPage() {
   const { wishlist, removeFromWishlist, clearWishlist } = useWishlistStore();
   const addToCart = useCartStore((state) => state.addToCart);
 
-  if (wishlist.length === 0) {
+  // Remove duplicates by ID for safe rendering
+  const uniqueWishlist = [...new Map(wishlist.map((item) => [item.id, item])).values()];
+
+  if (uniqueWishlist.length === 0) {
     return (
       <div className="p-8 text-center">
         <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -34,18 +36,18 @@ export default function WishlistPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-xl font-bold text-black">Wishlist ({wishlist.length})</h1>
+          <h1 className="text-xl font-bold text-black">Wishlist ({uniqueWishlist.length})</h1>
           <button onClick={clearWishlist} className="text-red-500 text-sm font-medium">
             Clear
           </button>
         </div>
       </div>
 
-      {/* WISHLIST ITEMS — CLICKABLE */}
+      {/* WISHLIST ITEMS */}
       <div className="p-4 pb-32 space-y-4">
-        {wishlist.map((item) => (
+        {uniqueWishlist.map((item, index) => (
           <motion.div
-            key={item.id}
+            key={`${item.id}-${index}`} // fallback unique key
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
@@ -53,7 +55,6 @@ export default function WishlistPage() {
           >
             <Link href={`/deals/${item.id}`}>
               <div className="flex gap-3 p-4 cursor-pointer hover:bg-white/50 transition-colors">
-                {/* IMAGE */}
                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                   <Image
                     src={`/images/${item.img}`}
@@ -63,7 +64,6 @@ export default function WishlistPage() {
                   />
                 </div>
 
-                {/* DETAILS */}
                 <div className="flex-1">
                   <p className="font-medium text-black line-clamp-2">{item.title}</p>
                   <p className="text-lg font-bold text-red-500">₦{item.price.toLocaleString()}</p>
@@ -71,7 +71,6 @@ export default function WishlistPage() {
               </div>
             </Link>
 
-            {/* ACTIONS — BELOW CARD */}
             <div className="flex justify-between items-center px-4 pb-3">
               <button
                 onClick={() => {

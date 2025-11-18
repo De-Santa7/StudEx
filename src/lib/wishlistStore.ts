@@ -1,4 +1,3 @@
-// src/lib/wishlistStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -22,9 +21,11 @@ export const useWishlistStore = create<WishlistStore>()(
       wishlist: [],
 
       addToWishlist: (item) =>
-        set((state) => ({
-          wishlist: [...state.wishlist, item],
-        })),
+        set((state) => {
+          // ✅ Only add if it's not already in the wishlist
+          if (state.wishlist.some((w) => w.id === item.id)) return state;
+          return { wishlist: [...state.wishlist, item] };
+        }),
 
       removeFromWishlist: (id) =>
         set((state) => ({
