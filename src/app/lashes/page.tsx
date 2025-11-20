@@ -1,4 +1,4 @@
-// src/app/food/page.tsx
+// src/app/lashes/page.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -11,20 +11,20 @@ import { useCartStore } from "@/lib/cartStore";
 import { useWishlistStore } from "@/lib/wishlistStore";
 
 const vendors = [
-  { id: 1, name: "Mama Put", rating: 4.8, time: "10-15", img: "vendor-1.jpg", dishes: 32, location: "Near Gate 2" },
-  { id: 2, name: "Jollof King", rating: 4.9, time: "12-18", img: "vendor-2.jpg", dishes: 28, location: "Cafeteria Block" },
-  { id: 3, name: "Indomie Spot", rating: 4.7, time: "8-12", img: "vendor-3.jpg", dishes: 15, location: "Hostel A" },
-  { id: 4, name: "Shawarma Palace", rating: 4.6, time: "15-20", img: "vendor-4.jpg", dishes: 22, location: "Near Library" },
+  { id: 1, name: "Lash Queen Bella", rating: 4.9, time: "45-60", img: "lashes-vendor-1.jpg", dishes: 18, location: "Moremi Hall" },
+  { id: 2, name: "Flutter Studio", rating: 4.8, time: "50-70", img: "lashes-vendor-2.jpg", dishes: 22, location: "Angola Hall" },
+  { id: 3, name: "Lash Bae OAU", rating: 4.7, time: "40-55", img: "lashes-vendor-3.jpg", dishes: 15, location: "Fajuyi Hall" },
+  { id: 4, name: "Volume Vault", rating: 4.8, time: "60-90", img: "lashes-vendor-4.jpg", dishes: 20, location: "Postgraduate Hall" },
 ];
 
 const popular = [
-  { id: 1, title: "Jollof Rice + Chicken", price: 1200, img: "jollo.jpg", vendor: "Mama Put", rating: 4.9 },
-  { id: 2, title: "Beef Shawarma", price: 1000, img: "shawarma.jpg", vendor: "Shawarma Palace", rating: 4.8 },
-  { id: 3, title: "Indomie + Egg + Plantain", price: 500, img: "indomie.jpg", vendor: "Indomie Spot", rating: 4.7 },
-  { id: 4, title: "Eba + Egusi", price: 800, img: "eba.jpg", vendor: "Mama Put", rating: 4.6 },
+  { id: 1, title: "Classic Lashes", price: 5000, img: "classic-lashes.jpg", vendor: "Lash Queen Bella", rating: 4.9 },
+  { id: 2, title: "Volume Lashes", price: 8000, img: "volume-lashes.jpg", vendor: "Flutter Studio", rating: 4.8 },
+  { id: 3, title: "Hybrid Lashes", price: 6500, img: "hybrid-lashes.jpg", vendor: "Lash Bae OAU", rating: 4.7 },
+  { id: 4, title: "Lash Lift + Tint", price: 4500, img: "lash-lift.jpg", vendor: "Lash Queen Bella", rating: 4.9 },
 ];
 
-export default function FoodPage() {
+export default function LashesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -95,7 +95,7 @@ export default function FoodPage() {
         </div>
 
         <h1 className="text-center text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent pb-3">
-          Food & Snacks
+          Lashes
         </h1>
 
         {/* SEARCH + FILTER */}
@@ -103,7 +103,7 @@ export default function FoodPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
             <input
-              type="text" placeholder="Search food, vendor or location..."
+              type="text" placeholder="Search lash tech or location..."
               value={search} onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 bg-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all"
             />
@@ -116,15 +116,15 @@ export default function FoodPage() {
 
       <div className="p-6 space-y-10 pb-32">
 
-        {/* TRENDING DISHES */}
+        {/* TRENDING LASHES */}
         <section>
           <h2 className="text-xl font-black text-gray-800 mb-5 flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-purple-600" />
-            Trending on Campus
+            Trending Lashes This Week
           </h2>
           <div className="grid grid-cols-2 gap-5">
             {popular.map((item) => (
-              <Link href={`/food/dish/${item.id}`} key={item.id}>
+              <Link href={`/lashes/${item.id}`} key={item.id}>
                 <motion.div
                   whileHover={{ y: -6, scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -166,18 +166,18 @@ export default function FoodPage() {
           </div>
         </section>
 
-        {/* TOP VENDORS */}
+        {/* TOP LASH TECHS */}
         <section>
           <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl font-black text-gray-800">Top Vendors</h2>
-            <Link href="/food/vendors" className="text-purple-600 font-bold text-sm flex items-center gap-1">
+            <h2 className="text-xl font-black text-gray-800">Top Lash Techs</h2>
+            <Link href="/lashes/techs" className="text-purple-600 font-bold text-sm flex items-center gap-1">
               See All <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
 
           <div className="space-y-4">
             {filteredVendors.map((v) => (
-              <Link href={`/food/vendor/${v.id}`} key={v.id}>
+              <Link href={`/lashes/tech/${v.id}`} key={v.id}>
                 <motion.div
                   whileHover={{ x: 8 }}
                   className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5"
@@ -199,7 +199,7 @@ export default function FoodPage() {
                         <Clock className="w-5 h-5 text-teal-600" />
                         <span>{v.time} mins</span>
                       </div>
-                      <span className="text-gray-600">{v.dishes} items</span>
+                      <span className="text-gray-600">{v.dishes} styles</span>
                     </div>
                   </div>
                   <ChevronRight className="w-6 h-6 text-purple-400" />
@@ -229,8 +229,8 @@ export default function FoodPage() {
       <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
         <div className="flex justify-around py-3">
           <Link href="/" className="text-gray-500 text-xs">Home</Link>
-          <div className="text-purple-600 font-black text-sm">Food</div>
-          <Link href="/cart" className="text-gray-500 text-xs">Cart</Link>
+          <Link href="/categories" className="text-gray-500 text-xs">Categories</Link>
+          <Link href="/cart" className="text-purple-600 font-black text-sm">Cart</Link>
           <Link href="/wishlist" className="text-gray-500 text-xs">Wishlist</Link>
           <Link href="/account" className="text-gray-500 text-xs">Account</Link>
         </div>

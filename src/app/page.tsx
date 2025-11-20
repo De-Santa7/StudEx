@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, LogIn, UserPlus, Package, Zap, ArrowRight, Plus, Heart, Scissors, Shirt, Sparkles } from "lucide-react";
+import { Search, LogIn, UserPlus, Package, Zap, ArrowRight, Plus, Heart, Scissors, Shirt, Sparkles, CupSoda } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -14,7 +14,6 @@ export default function HomePage() {
   const addToCart = useCartStore((state) => state.addToCart);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
 
-  // ✅ Mounted check to prevent hydration errors
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -28,11 +27,53 @@ export default function HomePage() {
   const cardHover = { whileHover: { y: -4, scale: 1.02 }, whileTap: { scale: 0.98 } };
   const buttonHover = { whileHover: { scale: 1.05 }, whileTap: { scale: 0.95 } };
 
+  // ✅ UPDATED SERVICES — ONLY THE 5 YOU REQUESTED
   const campusServices = [
-    { id: 1, title: "Food & Snacks", icon: Package, img: "food-1.jpg", href: "/food", color: "from-orange-100 to-red-100", hover: "hover:border-orange-300" },
-    { id: 2, title: "Hairdressing", icon: Scissors, img: "hair-1.jpg", href: "/hair", color: "from-pink-100 to-purple-100", hover: "hover:border-pink-300" },
-    { id: 3, title: "Laundry", icon: Shirt, img: "laundry-1.jpg", href: "/laundry", color: "from-blue-100 to-cyan-100", hover: "hover:border-blue-300" },
-    { id: 4, title: "Nails & Beauty", icon: Sparkles, img: "nails-1.jpg", href: "/nails", color: "from-purple-100 to-teal-100", hover: "hover:border-purple-300" },
+    {
+      id: 1,
+      title: "Food & Snacks",
+      icon: Package,
+      img: "food-1.jpg",
+      href: "/food",
+      color: "from-orange-100 to-red-100",
+      hover: "hover:border-orange-300",
+    },
+    {
+      id: 2,
+      title: "Nails & Beauty",
+      icon: Sparkles,
+      img: "nails-1.jpg",
+      href: "/nails",
+      color: "from-purple-100 to-teal-100",
+      hover: "hover:border-purple-300",
+    },
+    {
+      id: 3,
+      title: "Laundry",
+      icon: Shirt,
+      img: "laundry-1.jpg",
+      href: "/laundry",
+      color: "from-blue-100 to-cyan-100",
+      hover: "hover:border-blue-300",
+    },
+    {
+      id: 4,
+      title: "Lashes",
+      icon: Scissors,
+      img: "lashes-1.jpg",
+      href: "/lashes",
+      color: "from-pink-100 to-purple-100",
+      hover: "hover:border-pink-300",
+    },
+    {
+      id: 5,
+      title: "Drinks",
+      icon: CupSoda,
+      img: "drinks-1.jpg",
+      href: "/drinks",
+      color: "from-teal-100 to-green-100",
+      hover: "hover:border-teal-300",
+    },
   ];
 
   const foodDeals = [
@@ -58,11 +99,7 @@ export default function HomePage() {
       )}
 
       {/* TOP BAR */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 bg-white z-40 border-b shadow-sm"
-      >
+      <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="sticky top-0 bg-white z-40 border-b shadow-sm">
         <div className="flex items-center justify-between p-4">
           <Link href="/" className="flex items-center">
             <Image src="/images/logo-1.jpg" alt="StudEx Logo" width={140} height={40} className="h-10 w-auto object-contain" priority />
@@ -99,7 +136,10 @@ export default function HomePage() {
         {/* HERO */}
         <motion.div {...fadeInUp}>
           <Link href="/categories">
-            <motion.div {...cardHover} className="relative rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden h-48 bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500">
+            <motion.div
+              {...cardHover}
+              className="relative rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden h-48 bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500"
+            >
               <div className="relative z-10 h-full flex flex-col justify-end">
                 <motion.h2 initial={{ x: -20 }} whileInView={{ x: 0 }} className="text-2xl font-bold drop-shadow-2xl">
                   The Amazon for Campus Hustlers
@@ -115,7 +155,7 @@ export default function HomePage() {
           </Link>
         </motion.div>
 
-        {/* CAMPUS SERVICES */}
+        {/* CAMPUS SERVICES — UPDATED */}
         <motion.div {...fadeInUp}>
           <h3 className="text-lg font-bold text-black mb-3 flex items-center gap-2">
             <Zap className="w-5 h-5 text-yellow-500 animate-pulse" />
@@ -158,7 +198,9 @@ export default function HomePage() {
               </motion.div>
               Flash Deals
             </motion.h3>
-            <Link href="/deals" className="text-black text-sm font-medium hover:underline">See All</Link>
+            <Link href="/deals" className="text-black text-sm font-medium hover:underline">
+              See All
+            </Link>
           </div>
 
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="flex space-x-3 overflow-x-auto hide-scrollbar pb-2">
@@ -170,7 +212,6 @@ export default function HomePage() {
                       <Image src={`/images/${deal.img}`} alt={deal.title} fill className="object-cover hover:scale-105 transition-transform duration-300" />
                     </div>
 
-                    {/* ADD TO CART BUTTON */}
                     <motion.button
                       onClick={(e) => {
                         e.preventDefault();
@@ -185,7 +226,6 @@ export default function HomePage() {
                       <Plus className="w-4 h-4 text-primary" />
                     </motion.button>
 
-                    {/* WISHLIST BUTTON — ✅ Hydration-safe */}
                     <motion.button
                       onClick={(e) => {
                         e.preventDefault();
@@ -203,11 +243,7 @@ export default function HomePage() {
                       whileTap={{ scale: 0.9 }}
                       className="absolute bottom-2 right-2 p-1.5 bg-white rounded-full shadow"
                     >
-                      <Heart
-                        className={`w-4 h-4 transition-all ${
-                          mounted && isInWishlist(deal.id) ? "fill-red-500 text-red-500" : "text-gray-400"
-                        }`}
-                      />
+                      <Heart className={`w-4 h-4 transition-all ${mounted && isInWishlist(deal.id) ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
                     </motion.button>
 
                     <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">{deal.time}</div>
@@ -222,7 +258,6 @@ export default function HomePage() {
           </motion.div>
         </motion.div>
 
-        {/* TEMP: Login Toggle */}
         <motion.div {...fadeInUp} className="p-4 bg-surface rounded-xl text-center">
           <p className="text-sm text-black/70 mb-2">{isLoggedIn ? "You are logged in" : "Not logged in"}</p>
           <motion.button {...buttonHover} onClick={isLoggedIn ? logout : login} className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-bold hover:bg-primary/90 transition-all shadow hover:shadow-lg">
@@ -231,14 +266,31 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* BOTTOM NAV */}
       <motion.div initial={{ y: 100 }} animate={{ y: 0 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
         <div className="flex justify-around py-2">
-          <Link href="/" className="text-primary font-bold"><span className="text-xs">Home</span></Link>
-          <Link href="/categories" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Categories</motion.div></Link>
-          <Link href="/cart" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Cart</motion.div></Link>
-          <Link href="/wishlist" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Wishlist</motion.div></Link>
-          <Link href="/account" className="text-black/60"><motion.div whileHover={{ y: -2 }} className="text-xs">Account</motion.div></Link>
+          <Link href="/" className="text-primary font-bold">
+            <span className="text-xs">Home</span>
+          </Link>
+          <Link href="/categories" className="text-black/60">
+            <motion.div whileHover={{ y: -2 }} className="text-xs">
+              Categories
+            </motion.div>
+          </Link>
+          <Link href="/cart" className="text-black/60">
+            <motion.div whileHover={{ y: -2 }} className="text-xs">
+              Cart
+            </motion.div>
+          </Link>
+          <Link href="/wishlist" className="text-black/60">
+            <motion.div whileHover={{ y: -2 }} className="text-xs">
+              Wishlist
+            </motion.div>
+          </Link>
+          <Link href="/account" className="text-black/60">
+            <motion.div whileHover={{ y: -2 }} className="text-xs">
+              Account
+            </motion.div>
+          </Link>
         </div>
       </motion.div>
     </>

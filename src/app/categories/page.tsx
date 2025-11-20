@@ -28,25 +28,11 @@ export default function CategoriesPage() {
       border: "hover:border-teal-300",
     },
     {
-      title: "Hairdressing",
-      href: "/hairdressing",
-      image: "/images/hair-1.jpg",
-      alt: "Clean fades, braids, coloring",
-      border: "hover:border-purple-300",
-    },
-    {
       title: "Nails",
       href: "/nails",
       image: "/images/nails-1.jpg",
       alt: "Manicure, pedicure, gel, acrylic",
       border: "hover:border-pink-300",
-    },
-    {
-      title: "Lashes",
-      href: "/lashes",
-      image: "/images/lashes-1.jpg",
-      alt: "Extensions, lifts, volume",
-      border: "hover:border-rose-300",
     },
     {
       title: "Laundry",
@@ -56,39 +42,18 @@ export default function CategoriesPage() {
       border: "hover:border-blue-300",
     },
     {
-      title: "Delivery",
-      href: "/delivery",
-      image: "/images/delivery-1.jpg",
-      alt: "Campus runners, 15-min drop",
-      border: "hover:border-orange-300",
+      title: "Lashes",
+      href: "/lashes",
+      image: "/images/lashes-1.jpg",
+      alt: "Extensions, lifts, volume",
+      border: "hover:border-rose-300",
     },
     {
-      title: "Graphic Design",
-      href: "/graphics",
-      image: "/images/graphics-1.jpg",
-      alt: "Flyers, logos, CVs, edits",
-      border: "hover:border-indigo-300",
-    },
-    {
-      title: "Printing",
-      href: "/printing",
-      image: "/images/printing-1.jpg",
-      alt: "PDFs, notes, posters, fast",
+      title: "Drinks",
+      href: "/drinks",
+      image: "/images/drinks-1.jpg",
+      alt: "Smoothies, soda, energy drinks",
       border: "hover:border-green-300",
-    },
-    {
-      title: "Tutoring",
-      href: "/tutoring",
-      image: "/images/tutoring-1.jpg",
-      alt: "Math, coding, exam prep",
-      border: "hover:border-cyan-300",
-    },
-    {
-      title: "Gift Curation",
-      href: "/gifts",
-      image: "/images/gifts-1.jpg",
-      alt: "Custom gifts, care packages, surprises",
-      border: "hover:border-amber-300",
     },
   ];
 
@@ -142,10 +107,7 @@ export default function CategoriesPage() {
         </motion.div>
 
         {/* Back to Home CTA */}
-        <motion.div
-          {...fadeInUp}
-          className="mt-8 flex justify-center"
-        >
+        <motion.div {...fadeInUp} className="mt-8 flex justify-center">
           <Link href="/">
             <motion.button
               whileHover={{ x: -4 }}

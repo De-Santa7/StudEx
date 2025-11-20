@@ -1,33 +1,37 @@
-// src/app/food/page.tsx
+// src/app/drinks/page.tsx
 "use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Package, Clock, Star, Filter, Search, Plus, Heart, X, MapPin, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
+import { 
+  Package, Clock, Star, Search, Plus, Heart, X, 
+  MapPin, ChevronLeft, ChevronRight, Sparkles   // ← ChevronRight added!
+} from "lucide-react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useCartStore } from "@/lib/cartStore";
 import { useWishlistStore } from "@/lib/wishlistStore";
 
+// ... rest of your data (vendors, popular) stays exactly the same ...
+
 const vendors = [
-  { id: 1, name: "Mama Put", rating: 4.8, time: "10-15", img: "vendor-1.jpg", dishes: 32, location: "Near Gate 2" },
-  { id: 2, name: "Jollof King", rating: 4.9, time: "12-18", img: "vendor-2.jpg", dishes: 28, location: "Cafeteria Block" },
-  { id: 3, name: "Indomie Spot", rating: 4.7, time: "8-12", img: "vendor-3.jpg", dishes: 15, location: "Hostel A" },
-  { id: 4, name: "Shawarma Palace", rating: 4.6, time: "15-20", img: "vendor-4.jpg", dishes: 22, location: "Near Library" },
+  { id: 1, name: "Chill Spot", rating: 4.9, time: "5-10", img: "drinks-vendor-1.jpg", items: 42, location: "SUB" },
+  { id: 2, name: "Zobo Queen", rating: 4.8, time: "3-8", img: "drinks-vendor-2.jpg", items: 38, location: "Moremi" },
+  { id: 3, name: "Smoothy Bae", rating: 4.7, time: "7-12", img: "drinks-vendor-3.jpg", items: 31, location: "Angola" },
+  { id: 4, name: "Tiger Nut Plug", rating: 4.9, time: "5-10", img: "drinks-vendor-4.jpg", items: 35, location: "Fajuyi" },
 ];
 
 const popular = [
-  { id: 1, title: "Jollof Rice + Chicken", price: 1200, img: "jollo.jpg", vendor: "Mama Put", rating: 4.9 },
-  { id: 2, title: "Beef Shawarma", price: 1000, img: "shawarma.jpg", vendor: "Shawarma Palace", rating: 4.8 },
-  { id: 3, title: "Indomie + Egg + Plantain", price: 500, img: "indomie.jpg", vendor: "Indomie Spot", rating: 4.7 },
-  { id: 4, title: "Eba + Egusi", price: 800, img: "eba.jpg", vendor: "Mama Put", rating: 4.6 },
+  { id: 1, title: "Zobo + Ginger", price: 500, img: "zobo.jpg", vendor: "Zobo Queen", rating: 4.9 },
+  { id: 2, title: "Chapman Deluxe", price: 800, img: "chapman.jpg", vendor: "Chill Spot", rating: 4.8 },
+  { id: 3, title: "Pineapple Smoothie", price: 1200, img: "smoothie.jpg", vendor: "Smoothy Bae", rating: 5.0 },
+  { id: 4, title: "Kunnu Aya", price: 600, img: "kunnu.jpg", vendor: "Tiger Nut Plug", rating: 4.9 },
 ];
 
-export default function FoodPage() {
+export default function DrinksPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
   const [localWishlist, setLocalWishlist] = useState<Set<number>>(new Set());
 
   const addToCart = useCartStore((state) => state.addToCart);
@@ -58,7 +62,7 @@ export default function FoodPage() {
 
   const handleAddToCart = useCallback((item: any, e: React.MouseEvent) => {
     e.preventDefault(); e.stopPropagation();
-    addToCart(item);
+    addToCart({ ...item, category: "Drinks" });
     showToast("Added to Cart!");
   }, [addToCart, showToast]);
 
@@ -95,36 +99,34 @@ export default function FoodPage() {
         </div>
 
         <h1 className="text-center text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent pb-3">
-          Food & Snacks
+          Drinks & Smoothies
         </h1>
 
-        {/* SEARCH + FILTER */}
-        <div className="px-4 pb-4 flex gap-3">
-          <div className="flex-1 relative">
+        <div className="px-4 pb-4">
+          <div className="relative">
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
             <input
-              type="text" placeholder="Search food, vendor or location..."
-              value={search} onChange={(e) => setSearch(e.target.value)}
+              type="text"
+              placeholder="Search drinks or vendors..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 bg-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all"
             />
           </div>
-          <button onClick={() => setFilterOpen(true)} className="p-3.5 bg-gradient-to-r from-purple-100 to-teal-100 rounded-full">
-            <Filter className="w-6 h-6 text-purple-600" />
-          </button>
         </div>
       </motion.div>
 
       <div className="p-6 space-y-10 pb-32">
 
-        {/* TRENDING DISHES */}
+        {/* CAMPUS FAVORITES */}
         <section>
           <h2 className="text-xl font-black text-gray-800 mb-5 flex items-center gap-3">
             <Sparkles className="w-6 h-6 text-purple-600" />
-            Trending on Campus
+            Campus Favorites
           </h2>
           <div className="grid grid-cols-2 gap-5">
             {popular.map((item) => (
-              <Link href={`/food/dish/${item.id}`} key={item.id}>
+              <Link href={`/drinks/${item.id}`} key={item.id}>
                 <motion.div
                   whileHover={{ y: -6, scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -135,17 +137,13 @@ export default function FoodPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
 
-                  <button
-                    onClick={(e) => handleAddToCart({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute top-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
-                  >
+                  <button onClick={(e) => handleAddToCart({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
+                    className="absolute top-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl">
                     <Plus className="w-5 h-5 text-purple-600" />
                   </button>
 
-                  <button
-                    onClick={(e) => handleWishlist({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute bottom-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
-                  >
+                  <button onClick={(e) => handleWishlist({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
+                    className="absolute bottom-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl">
                     <Heart className={`w-5 h-5 transition-all ${isInWishlist(item.id) ? "fill-pink-500 text-pink-500 scale-110" : "text-gray-600"}`} />
                   </button>
 
@@ -168,20 +166,11 @@ export default function FoodPage() {
 
         {/* TOP VENDORS */}
         <section>
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl font-black text-gray-800">Top Vendors</h2>
-            <Link href="/food/vendors" className="text-purple-600 font-bold text-sm flex items-center gap-1">
-              See All <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
+          <h2 className="text-xl font-black text-gray-800 mb-5">Top Drink Vendors</h2>
           <div className="space-y-4">
             {filteredVendors.map((v) => (
-              <Link href={`/food/vendor/${v.id}`} key={v.id}>
-                <motion.div
-                  whileHover={{ x: 8 }}
-                  className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5"
-                >
+              <Link href={`/drinks/vendor/${v.id}`} key={v.id}>
+                <motion.div whileHover={{ x: 8 }} className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5">
                   <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-purple-100">
                     <Image src={`/images/${v.img}`} alt={v.name} fill className="object-cover" />
                   </div>
@@ -199,10 +188,10 @@ export default function FoodPage() {
                         <Clock className="w-5 h-5 text-teal-600" />
                         <span>{v.time} mins</span>
                       </div>
-                      <span className="text-gray-600">{v.dishes} items</span>
+                      <span className="text-gray-600">{v.items} drinks</span>
                     </div>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-purple-400" />
+                  <ChevronRight className="w-6 h-6 text-purple-400" />  {/* NOW WORKS */}
                 </motion.div>
               </Link>
             ))}
@@ -210,26 +199,11 @@ export default function FoodPage() {
         </section>
       </div>
 
-      {/* FILTER MODAL */}
-      {filterOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => setFilterOpen(false)}>
-          <motion.div initial={{ y: 400 }} animate={{ y: 0 }} className="bg-white rounded-t-3xl p-6 w-full" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">Filters</h3>
-              <button onClick={() => setFilterOpen(false)}><X className="w-7 h-7" /></button>
-            </div>
-            <button className="w-full py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-lg rounded-2xl shadow-xl">
-              Apply Filters
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
-
       {/* BOTTOM NAV */}
       <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
         <div className="flex justify-around py-3">
           <Link href="/" className="text-gray-500 text-xs">Home</Link>
-          <div className="text-purple-600 font-black text-sm">Food</div>
+          <div className="text-purple-600 font-black text-sm">Drinks</div>
           <Link href="/cart" className="text-gray-500 text-xs">Cart</Link>
           <Link href="/wishlist" className="text-gray-500 text-xs">Wishlist</Link>
           <Link href="/account" className="text-gray-500 text-xs">Account</Link>

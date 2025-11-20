@@ -4,10 +4,12 @@
 import { Plus, Minus, Trash2, Package, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // ✅ import router
 import { motion } from "framer-motion";
 import { useCartStore } from "@/lib/cartStore";
 
 export default function CartPage() {
+  const router = useRouter(); // ✅ initialize router
   const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -29,11 +31,12 @@ export default function CartPage() {
       {/* TOP BAR */}
       <div className="sticky top-0 bg-white z-40 border-b shadow-sm">
         <div className="flex items-center justify-between p-4">
-          <Link href="/deals" className="text-black">
+          {/* ✅ BACK BUTTON NOW DYNAMIC */}
+          <button onClick={() => router.back()} className="text-black">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-          </Link>
+          </button>
           <h1 className="text-xl font-bold text-black">Cart ({cart.length})</h1>
           <button onClick={clearCart} className="text-red-500 text-sm font-medium">
             Clear
@@ -52,12 +55,7 @@ export default function CartPage() {
             className="bg-surface rounded-xl p-4 flex gap-3 shadow-sm"
           >
             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              <Image
-                src={`/images/${item.img}`}
-                alt={item.title}
-                fill
-                className="object-cover"
-              />
+              <Image src={`/images/${item.img}`} alt={item.title} fill className="object-cover" />
             </div>
 
             <div className="flex-1">
@@ -124,21 +122,11 @@ export default function CartPage() {
       {/* BOTTOM NAV */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
         <div className="flex justify-around py-2">
-          <Link href="/" className="text-black/60">
-            <span className="text-xs">Home</span>
-          </Link>
-          <Link href="/categories" className="text-black/60">
-            <span className="text-xs">Categories</span>
-          </Link>
-          <Link href="/cart" className="text-primary font-bold">
-            <span className="text-xs">Cart</span>
-          </Link>
-          <Link href="/wishlist" className="text-black/60">
-            <span className="text-xs">Wishlist</span>
-          </Link>
-          <Link href="/account" className="text-black/60">
-            <span className="text-xs">Account</span>
-          </Link>
+          <Link href="/" className="text-black/60"><span className="text-xs">Home</span></Link>
+          <Link href="/categories" className="text-black/60"><span className="text-xs">Categories</span></Link>
+          <Link href="/cart" className="text-primary font-bold"><span className="text-xs">Cart</span></Link>
+          <Link href="/wishlist" className="text-black/60"><span className="text-xs">Wishlist</span></Link>
+          <Link href="/account" className="text-black/60"><span className="text-xs">Account</span></Link>
         </div>
       </div>
     </>
