@@ -5,15 +5,12 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
-  Package, Clock, Star, Search, Plus, Heart, X, 
-  MapPin, ChevronLeft, ChevronRight, Sparkles   // ← ChevronRight added!
+import {
+  Clock, Star, Search, Plus, Heart, MapPin, ChevronLeft, ChevronRight, Sparkles
 } from "lucide-react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useCartStore } from "@/lib/cartStore";
 import { useWishlistStore } from "@/lib/wishlistStore";
-
-// ... rest of your data (vendors, popular) stays exactly the same ...
 
 const vendors = [
   { id: 1, name: "Chill Spot", rating: 4.9, time: "5-10", img: "drinks-vendor-1.jpg", items: 42, location: "SUB" },
@@ -89,12 +86,19 @@ export default function DrinksPage() {
   return (
     <>
       {/* TOP BAR */}
-      <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b">
+      <motion.div
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="sticky top-0 bg-white/90 backdrop-blur-xl z-50 border-b shadow-sm"
+      >
         <div className="flex items-center justify-between p-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-purple-100 rounded-full transition">
             <ChevronLeft className="w-7 h-7 text-purple-600" />
           </button>
-          <Image src="/images/logo-1.jpg" alt="StudEx" width={140} height={40} className="h-10" priority />
+          <Link href="/" className="relative w-28 h-12 flex-shrink-0">
+            <Image src="/images/logo-1.jpg" alt="StudEx" fill className="object-contain" priority />
+          </Link>
           <div className="w-10" />
         </div>
 
@@ -125,9 +129,13 @@ export default function DrinksPage() {
             Campus Favorites
           </h2>
           <div className="grid grid-cols-2 gap-5">
-            {popular.map((item) => (
+            {popular.map((item, i) => (
               <Link href={`/drinks/${item.id}`} key={item.id}>
                 <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -6, scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden relative group"
@@ -137,13 +145,17 @@ export default function DrinksPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
 
-                  <button onClick={(e) => handleAddToCart({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute top-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl">
+                  <button
+                    onClick={(e) => handleAddToCart({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
+                    className="absolute top-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
+                  >
                     <Plus className="w-5 h-5 text-purple-600" />
                   </button>
 
-                  <button onClick={(e) => handleWishlist({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute bottom-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl">
+                  <button
+                    onClick={(e) => handleWishlist({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
+                    className="absolute bottom-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
+                  >
                     <Heart className={`w-5 h-5 transition-all ${isInWishlist(item.id) ? "fill-pink-500 text-pink-500 scale-110" : "text-gray-600"}`} />
                   </button>
 
@@ -168,9 +180,16 @@ export default function DrinksPage() {
         <section>
           <h2 className="text-xl font-black text-gray-800 mb-5">Top Drink Vendors</h2>
           <div className="space-y-4">
-            {filteredVendors.map((v) => (
+            {filteredVendors.map((v, i) => (
               <Link href={`/drinks/vendor/${v.id}`} key={v.id}>
-                <motion.div whileHover={{ x: 8 }} className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ x: 6 }}
+                  className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5"
+                >
                   <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-purple-100">
                     <Image src={`/images/${v.img}`} alt={v.name} fill className="object-cover" />
                   </div>
@@ -191,7 +210,7 @@ export default function DrinksPage() {
                       <span className="text-gray-600">{v.items} drinks</span>
                     </div>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-purple-400" />  {/* NOW WORKS */}
+                  <ChevronRight className="w-6 h-6 text-purple-400" />
                 </motion.div>
               </Link>
             ))}
@@ -200,7 +219,12 @@ export default function DrinksPage() {
       </div>
 
       {/* BOTTOM NAV */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl"
+      >
         <div className="flex justify-around py-3">
           <Link href="/" className="text-gray-500 text-xs">Home</Link>
           <div className="text-purple-600 font-black text-sm">Drinks</div>

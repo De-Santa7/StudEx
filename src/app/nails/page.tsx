@@ -85,12 +85,28 @@ export default function NailsPage() {
   return (
     <>
       {/* TOP BAR */}
-      <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b">
+      <motion.div
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="sticky top-0 bg-white/90 backdrop-blur-xl z-50 border-b shadow-sm"
+      >
         <div className="flex items-center justify-between p-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-purple-100 rounded-full transition">
             <ChevronLeft className="w-7 h-7 text-purple-600" />
           </button>
-          <Image src="/images/logo-1.jpg" alt="StudEx" width={140} height={40} className="h-10" priority />
+
+          {/* Better Logo */}
+          <Link href="/" className="relative w-28 h-12 flex-shrink-0">
+            <Image
+              src="/images/logo-1.jpg"
+              alt="StudEx"
+              fill
+              className="object-contain"
+              priority
+            />
+          </Link>
+
           <div className="w-10" />
         </div>
 
@@ -103,12 +119,17 @@ export default function NailsPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
             <input
-              type="text" placeholder="Search nail tech or location..."
-              value={search} onChange={(e) => setSearch(e.target.value)}
+              type="text"
+              placeholder="Search nail tech or location..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-3.5 bg-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all"
             />
           </div>
-          <button onClick={() => setFilterOpen(true)} className="p-3.5 bg-gradient-to-r from-purple-100 to-teal-100 rounded-full">
+          <button
+            onClick={() => setFilterOpen(true)}
+            className="p-3.5 bg-gradient-to-r from-purple-100 to-teal-100 rounded-full hover:scale-105 transition"
+          >
             <Filter className="w-6 h-6 text-purple-600" />
           </button>
         </div>
@@ -123,9 +144,13 @@ export default function NailsPage() {
             Trending on Campus
           </h2>
           <div className="grid grid-cols-2 gap-5">
-            {popular.map((item) => (
+            {popular.map((item, i) => (
               <Link href={`/nails/${item.id}`} key={item.id}>
                 <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
                   whileHover={{ y: -6, scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden relative group"
@@ -176,10 +201,14 @@ export default function NailsPage() {
           </div>
 
           <div className="space-y-4">
-            {filteredVendors.map((v) => (
+            {filteredVendors.map((v, i) => (
               <Link href={`/nails/tech/${v.id}`} key={v.id}>
                 <motion.div
-                  whileHover={{ x: 8 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ x: 6 }}
                   className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5"
                 >
                   <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-purple-100">
@@ -212,8 +241,19 @@ export default function NailsPage() {
 
       {/* FILTER MODAL */}
       {filterOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-black/60 z-50 flex items-end" onClick={() => setFilterOpen(false)}>
-          <motion.div initial={{ y: 400 }} animate={{ y: 0 }} className="bg-white rounded-t-3xl p-6 w-full" onClick={e => e.stopPropagation()}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/60 z-50 flex items-end"
+          onClick={() => setFilterOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 400 }}
+            animate={{ y: 0 }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            className="bg-white rounded-t-3xl p-6 w-full"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">Filters</h3>
               <button onClick={() => setFilterOpen(false)}><X className="w-7 h-7" /></button>
@@ -226,7 +266,12 @@ export default function NailsPage() {
       )}
 
       {/* BOTTOM NAV */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl"
+      >
         <div className="flex justify-around py-3">
           <Link href="/" className="text-gray-500 text-xs">Home</Link>
           <Link href="/categories" className="text-gray-500 text-xs">Categories</Link>

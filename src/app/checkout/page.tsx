@@ -4,7 +4,14 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { Package, CreditCard, MapPin, ArrowLeft, ChevronDown, Check } from "lucide-react";
+import {
+  Package,
+  CreditCard,
+  MapPin,
+  ArrowLeft,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useCartStore } from "@/lib/cartStore";
 import dynamic from "next/dynamic";
 
@@ -20,8 +27,14 @@ export default function CheckoutPage() {
   const totalInKobo = total * 100;
 
   const hostels = [
-    "Moremi Hall", "Angola Hall", "Mozambique Hall", "Fajuyi Hall",
-    "Awolowo Hall", "ETF Hall", "Muritala Hall", "Postgraduate Hall"
+    "Moremi Hall",
+    "Angola Hall",
+    "Mozambique Hall",
+    "Fajuyi Hall",
+    "Awolowo Hall",
+    "ETF Hall",
+    "Muritala Hall",
+    "Postgraduate Hall",
   ];
 
   const [selectedHostel, setSelectedHostel] = useState(hostels[0]);
@@ -41,7 +54,9 @@ export default function CheckoutPage() {
   useEffect(() => {
     const loadPaystack = async () => {
       if (typeof window === "undefined") return;
-      const PaystackFunction = await import("react-paystack").then(mod => mod.usePaystackPayment);
+      const PaystackFunction = await import("react-paystack").then(
+        (mod) => mod.usePaystackPayment
+      );
       initializePaymentRef.current = PaystackFunction(config);
       setIsPaystackReady(true);
     };
@@ -83,13 +98,18 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="text-center">
           <Package className="w-20 h-20 text-gray-300 mx-auto mb-6" />
-          <h2 className="text-3xl font-bold text-gray-800 mb-8">Your cart is empty</h2>
-          
-          {/* STUDEx PURPLE → TEAL GRADIENT BUTTON */}
+          <h2 className="text-3xl font-bold text-gray-800 mb-8">
+            Your cart is empty
+          </h2>
+
           <Link href="/deals">
-            <button className="px-12 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-xl rounded-full shadow-2xl hover:shadow-purple-500/50 transform hover:scale-105 transition-all duration-300">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-12 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-xl rounded-full shadow-2xl"
+            >
               Continue Shopping
-            </button>
+            </motion.button>
           </Link>
         </div>
       </div>
@@ -112,7 +132,11 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 px-5 pt-6 pb-32 space-y-6">
 
         {/* ORDER SUMMARY */}
-        <motion.div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+        >
           <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
             <Package className="w-6 h-6 text-purple-600" />
             Order Summary
@@ -124,7 +148,9 @@ export default function CheckoutPage() {
                   <p className="font-medium text-gray-900">{item.title}</p>
                   <p className="text-sm text-gray-500">× {item.quantity}</p>
                 </div>
-                <p className="font-bold text-gray-900">₦{(item.price * item.quantity).toLocaleString()}</p>
+                <p className="font-bold text-gray-900">
+                  ₦{(item.price * item.quantity).toLocaleString()}
+                </p>
               </div>
             ))}
             <div className="border-t pt-4">
@@ -138,19 +164,29 @@ export default function CheckoutPage() {
           </div>
         </motion.div>
 
-        {/* DELIVERY HOSTEL */}
-        <motion.div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        {/* HOSTEL SELECT */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+        >
           <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
             <MapPin className="w-6 h-6 text-teal-600" />
             Delivery Hostel
           </h2>
+
           <button
             onClick={() => setShowHostelDropdown(!showHostelDropdown)}
-            className="w-full p-5 bg-gray-50 rounded-xl text-gray-900 font-medium text-left flex items-center justify-between border border-gray-200 hover:border-purple-400 transition"
+            className="w-full p-5 bg-gray-50 rounded-xl text-gray-900 font-medium flex justify-between items-center border border-gray-200"
           >
             {selectedHostel}
-            <ChevronDown className={`w-6 h-6 transition-transform ${showHostelDropdown ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-6 h-6 transition-transform ${
+                showHostelDropdown ? "rotate-180" : ""
+              }`}
+            />
           </button>
+
           {showHostelDropdown && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -164,10 +200,12 @@ export default function CheckoutPage() {
                     setSelectedHostel(hostel);
                     setShowHostelDropdown(false);
                   }}
-                  className="w-full text-left p-4 text-gray-800 hover:bg-gradient-to-r hover:from-purple-50 hover:to-teal-50 transition flex items-center justify-between"
+                  className="w-full text-left p-4 text-gray-800 hover:bg-purple-50 flex justify-between"
                 >
                   {hostel}
-                  {selectedHostel === hostel && <Check className="w-5 h-5 text-purple-600" />}
+                  {selectedHostel === hostel && (
+                    <Check className="w-5 h-5 text-purple-600" />
+                  )}
                 </button>
               ))}
             </motion.div>
@@ -175,42 +213,75 @@ export default function CheckoutPage() {
         </motion.div>
 
         {/* PAYMENT METHOD */}
-        <motion.div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+        >
           <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-3">
             <CreditCard className="w-6 h-6 text-purple-600" />
             Payment Method
           </h2>
+
           <div className="space-y-4">
-            <label className="flex items-center justify-between p-5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition">
-              <div className="flex items-center gap-4">
-                <input type="radio" name="payment" value="pod" checked={selectedPayment === "pod"} onChange={(e) => setSelectedPayment(e.target.value)} className="w-6 h-6 text-purple-600" />
-                <Package className="w-7 h-7 text-purple-600" />
-                <span className="font-medium text-gray-900">Pay on Delivery (Cash)</span>
-              </div>
+
+            {/* PAY ON DELIVERY */}
+            <label className="flex items-center gap-4 p-5 bg-gray-50 rounded-xl cursor-pointer border border-gray-200 hover:border-purple-400 transition">
+              <input
+                type="radio"
+                name="payment"
+                value="pod"
+                checked={selectedPayment === "pod"}
+                onChange={(e) => setSelectedPayment(e.target.value)}
+                className="w-6 h-6 text-purple-600"
+              />
+              <Package className="w-7 h-7 text-purple-600" />
+              <span className="font-medium text-gray-900">Pay on Delivery</span>
             </label>
 
-            {/* CARD PAYMENT — STUDEx GRADIENT */}
-            <label className="flex items-center justify-between p-5 bg-gradient-to-r from-purple-600 to-teal-600 rounded-xl cursor-pointer text-white shadow-lg">
-              <div className="flex items-center gap-4">
-                <input type="radio" name="payment" value="card" checked={selectedPayment === "card"} onChange={(e) => setSelectedPayment(e.target.value)} className="w-6 h-6 text-white" />
-                <CreditCard className="w-7 h-7 text-white" />
-                <span className="font-bold">Pay with Card (Recommended)</span>
-              </div>
-              {selectedPayment === "card" && <span className="text-sm font-black">SECURED BY PAYSTACK</span>}
-            </label>
+            {/* PAY WITH CARD — NOW WHITE */}
+            <motion.label
+              whileHover={{ scale: 1.02 }}
+              className={`flex items-center gap-4 p-5 rounded-xl cursor-pointer shadow-md border 
+                ${
+                  selectedPayment === "card"
+                    ? "border-purple-500 bg-white"
+                    : "border-gray-200 bg-white"
+                }`}
+            >
+              <input
+                type="radio"
+                name="payment"
+                value="card"
+                checked={selectedPayment === "card"}
+                onChange={(e) => setSelectedPayment(e.target.value)}
+                className="w-6 h-6 text-purple-600"
+              />
+              <CreditCard className="w-7 h-7 text-purple-600" />
+              <span className="font-bold text-gray-900">Pay with Card</span>
+
+              {selectedPayment === "card" && (
+                <span className="ml-auto text-xs font-bold text-purple-600">
+                  SECURED BY PAYSTACK
+                </span>
+              )}
+            </motion.label>
           </div>
         </motion.div>
 
-        {/* FINAL PAY BUTTON — FULL STUDEx GRADIENT */}
+        {/* FINAL BUTTON */}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handlePlaceOrder}
           disabled={selectedPayment === "card" && !isPaystackReady}
-          className={`
-            w-full py-6 rounded-2xl font-black text-2xl shadow-2xl transition-all
+          className={`w-full py-6 rounded-2xl font-black text-2xl shadow-2xl 
             bg-gradient-to-r from-purple-600 to-teal-600 text-white
-            ${!isPaystackReady && selectedPayment === "card" ? "opacity-80" : "hover:shadow-purple-500/50"}
+            ${
+              !isPaystackReady && selectedPayment === "card"
+                ? "opacity-80"
+                : "hover:shadow-purple-500/50"
+            }
           `}
         >
           {selectedPayment === "card"
@@ -219,17 +290,6 @@ export default function CheckoutPage() {
               : "Loading Secure Payment..."
             : `Place Order — ₦${total.toLocaleString()}`}
         </motion.button>
-      </div>
-
-      {/* BOTTOM NAV */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg">
-        <div className="flex justify-around py-3">
-          <Link href="/" className="text-gray-600 text-xs">Home</Link>
-          <Link href="/deals" className="text-gray-600 text-xs">Deals</Link>
-          <Link href="/cart" className="text-purple-600 font-bold text-sm">Cart ({cart.length})</Link>
-          <Link href="/wishlist" className="text-gray-600 text-xs">Wishlist</Link>
-          <Link href="/account" className="text-gray-600 text-xs">Account</Link>
-        </div>
       </div>
     </>
   );

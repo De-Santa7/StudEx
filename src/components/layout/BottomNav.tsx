@@ -24,7 +24,7 @@ export default function BottomNav() {
       transition={{ type: "spring", stiffness: 250, damping: 20 }}
       className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200/50 z-50 shadow-xl"
     >
-      <div className="flex justify-around items-center h-16 px-1">
+      <div className="flex justify-around items-center h-16 px-3">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -40,12 +40,12 @@ export default function BottomNav() {
             >
               <motion.div
                 whileTap={{ scale: 0.9 }}
-                className="relative flex flex-col items-center gap-0.5 py-1 px-2"
+                className="relative flex flex-col items-center gap-1 py-1 px-3"
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-purple-100/40 rounded-xl -z-10"
+                    className="absolute inset-0 bg-purple-100/50 rounded-xl -z-10"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -53,7 +53,7 @@ export default function BottomNav() {
                 <motion.div
                   animate={{
                     scale: isActive ? 1.2 : 1,
-                    y: isActive ? -4 : 0,
+                    y: isActive ? -3 : 0,
                   }}
                   transition={{
                     type: "spring",
@@ -62,7 +62,7 @@ export default function BottomNav() {
                   }}
                 >
                   <Icon
-                    className="w-5 h-5"
+                    className="w-6 h-6"
                     strokeWidth={isActive ? 2.3 : 1.8}
                     stroke={isActive ? "#7C3AED" : "#9CA3AF"}
                     fill={isActive ? "#7C3AED" : "none"}
@@ -70,7 +70,7 @@ export default function BottomNav() {
                 </motion.div>
 
                 <span
-                  className={`text-[10px] font-semibold ${
+                  className={`text-[11px] font-semibold ${
                     isActive ? "text-purple-600" : "text-gray-500"
                   }`}
                 >
@@ -82,17 +82,19 @@ export default function BottomNav() {
         })}
       </div>
 
-      {/* Center Logo (Smaller & Cleaner) */}
-      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-10 bg-white rounded-full shadow-lg border-2 border-white flex items-center justify-center">
+      {/* Center Logo — now clickable + opens Cart */}
+      <Link
+        href="/cart"
+        className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full shadow-xl border-2 border-white flex items-center justify-center"
+      >
         <Image
           src="/images/logo-1.jpg"
           alt="StudEx"
-          width={32}
-          height={32}
-          className="w-8 h-8 rounded-full object-cover"
-          priority
+          width={40}
+          height={40}
+          className="w-10 h-10 rounded-full object-cover"
         />
-      </div>
+      </Link>
     </motion.div>
   );
 }
