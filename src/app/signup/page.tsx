@@ -1,7 +1,7 @@
 // src/app/signup/page.tsx
 "use client";
 
-import { User, Phone, MapPin, Lock, Eye, EyeOff, Mail, IdCard } from "lucide-react";
+import { User, Phone, MapPin, Lock, Eye, EyeOff, Mail, IdCard, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authStore";
@@ -65,9 +65,20 @@ export default function UserSignup() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 flex items-center justify-center p-4">
+      
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 z-50 text-purple-600 hover:bg-purple-50 p-3 rounded-full transition-all shadow-lg bg-white/80 backdrop-blur"
+      >
+        <ArrowLeft className="w-7 h-7" />
+      </button>
+
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
         className="bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-purple-100"
       >
         {/* OFFICIAL STUDEX LOGO */}
@@ -259,9 +270,13 @@ export default function UserSignup() {
 
         <p className="text-center text-sm text-gray-600 mt-8 font-medium">
           Already have an account?{" "}
-          <a href="/login" className="font-black text-purple-600 underline hover:text-purple-800">
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="font-black text-purple-600 underline hover:text-purple-800 bg-transparent border-none cursor-pointer"
+          >
             Login here
-          </a>
+          </button>
         </p>
       </motion.div>
     </div>

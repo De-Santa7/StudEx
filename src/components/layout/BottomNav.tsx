@@ -17,6 +17,11 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
 
+  // INSTANT KILL SWITCH — if we're on any /admin route → return null
+  if (pathname.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <motion.div
       initial={{ y: 80 }}
@@ -27,8 +32,7 @@ export default function BottomNav() {
       <div className="flex justify-around items-center h-16 px-3">
         {navItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/");
+            pathname === item.href || pathname.startsWith(item.href + "/");
 
           const Icon = item.icon;
 
@@ -82,7 +86,7 @@ export default function BottomNav() {
         })}
       </div>
 
-      {/* Center Logo — now clickable + opens Cart */}
+      {/* Center Logo — clickable to Cart */}
       <Link
         href="/cart"
         className="absolute -top-3 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-full shadow-xl border-2 border-white flex items-center justify-center"

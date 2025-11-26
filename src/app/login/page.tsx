@@ -1,11 +1,11 @@
 // src/app/login/page.tsx
 "use client";
 
+import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, Store, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authStore";
-import Link from "next/link";
 
 export default function UserLogin() {
   const [email, setEmail] = useState("");
@@ -28,7 +28,6 @@ export default function UserLogin() {
       return;
     }
 
-    // Simulate login
     login({ email, name: email.split("@")[0] });
     router.push("/");
   };
@@ -39,24 +38,30 @@ export default function UserLogin() {
       setError("Please use your valid PAU email (ends with @pau.edu.ng)");
       return;
     }
-
-    // Simulate sending reset link
     setResetSent(true);
     setError("");
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 flex items-center justify-center p-4">
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/30">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 flex items-center justify-center p-4">
+      
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 z-50 text-purple-600 hover:bg-purple-50 p-3 rounded-full transition-all shadow-lg bg-white/80 backdrop-blur"
+      >
+        <ArrowLeft className="w-7 h-7" />
+      </button>
 
-          {/* Back Button */}
-          <button
-            onClick={() => router.back()}
-            className="mb-6 text-purple-600 hover:bg-purple-50 p-2 rounded-full transition-all"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+      {/* LOGIN PAGE WITH FADE IN */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="w-full max-w-md"
+      >
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/30">
 
           {/* Logo & Title */}
           <div className="text-center mb-8">
@@ -67,11 +72,11 @@ export default function UserLogin() {
               {isForgotPassword ? "Reset Password" : "Welcome Back"}
             </h1>
             <p className="text-sm text-gray-600 mt-2">
-              {isForgotPassword ? "We’ll send you a reset link" : "Login to your StudEx account"}
+              {isForgotPassword ? "We'll send you a reset link" : "Login to your StudEx account"}
             </p>
           </div>
 
-          {/* FORGOT PASSWORD MODE */}
+          {/* Forgot Password Form */}
           {isForgotPassword ? (
             <form onSubmit={handleResetPassword} className="space-y-6">
               {resetSent ? (
@@ -80,9 +85,7 @@ export default function UserLogin() {
                     <Mail className="w-10 h-10 text-emerald-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-800">Check your email!</h3>
-                  <p className="text-sm text-gray-600 mt-2">
-                    We sent a password reset link to
-                  </p>
+                  <p className="text-sm text-gray-600 mt-2">We sent a password reset link to</p>
                   <p className="font-bold text-purple-600 mt-1">{resetEmail}</p>
                   <button
                     onClick={() => {
@@ -92,22 +95,21 @@ export default function UserLogin() {
                     }}
                     className="mt-6 text-purple-600 font-medium underline"
                   >
-                    ← Back to Login
+                    Back to Login
                   </button>
                 </div>
               ) : (
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-2 text-purple-700">
-                      <Mail className="w-4 h-4 inline mr-1" />
-                      Student Email
+                      <Mail className="w-4 h-4 inline mr-1" /> Student Email
                     </label>
                     <input
                       type="email"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="you@pau.edu.ng"
-                      className="w-full p-4 rounded-2xl border-2 focus:outline-none focus:ring-0 transition-all"
+                      className="w-full p-4 rounded-2xl border-2 focus:outline-none transition-all"
                       style={{ borderColor: resetEmail ? "#7C3AED" : "#e2e8f0" }}
                       required
                     />
@@ -130,18 +132,17 @@ export default function UserLogin() {
                     }}
                     className="w-full text-center text-purple-600 font-medium underline mt-4"
                   >
-                    ← Back to Login
+                    Back to Login
                   </button>
                 </>
               )}
             </form>
           ) : (
-            /* NORMAL LOGIN FORM */
+            /* Normal Login Form */
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-2 text-purple-700">
-                  <Mail className="w-4 h-4 inline mr-1" />
-                  Email
+                  <Mail className="w-4 h-4 inline mr-1" /> Email
                 </label>
                 <input
                   type="email"
@@ -156,8 +157,7 @@ export default function UserLogin() {
 
               <div className="relative">
                 <label className="block text-sm font-medium mb-2 text-purple-700">
-                  <Lock className="w-4 h-4 inline mr-1" />
-                  Password
+                  <Lock className="w-4 h-4 inline mr-1" /> Password
                 </label>
                 <input
                   type={showPass ? "text" : "password"}
@@ -202,22 +202,23 @@ export default function UserLogin() {
             </form>
           )}
 
-          {/* Sign Up Link */}
+          {/* Navigate to Signup */}
           {!isForgotPassword && (
             <p className="text-center text-sm text-gray-600 mt-8">
               New to StudEx?{" "}
-              <Link href="/signup" className="font-bold text-purple-600 underline">
+              <button
+                type="button"
+                onClick={() => router.push("/signup")}
+                className="font-bold text-purple-600 underline hover:text-purple-700 transition"
+              >
                 Create account
-              </Link>
+              </button>
             </p>
           )}
 
-          {/* Footer */}
-          <p className="text-center text-xs text-gray-500 mt-8">
-            © 2025 StudEx • Pan-Atlantic University Only
-          </p>
+          <p className="text-center text-xs text-gray-500 mt-8">© 2025 StudEx • Pan-Atlantic University Only</p>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
 }
