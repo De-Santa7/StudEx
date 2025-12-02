@@ -1,134 +1,191 @@
 // src/app/cart/page.tsx
 "use client";
 
-import { Plus, Minus, Trash2, Package, ArrowRight } from "lucide-react";
+import { Plus, Minus, Trash2, Package, ArrowRight, ShoppingBag, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // ✅ import router
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCartStore } from "@/lib/cartStore";
 
 export default function CartPage() {
-  const router = useRouter(); // ✅ initialize router
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
+const router = useRouter();
+const { cart, removeFromCart, updateQuantity, clearCart } = useCartStore();
+const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+// EMPTY CART — GOD TIER ANIMATION
+if (cart.length === 0) {
+return (
+<div className="min-h-screen bg-gradient-to-b from-purple-50 via-white to-teal-50 flex flex-col items-center justify-center px-8 pt-20 pb-32">
+<motion.div
+initial={{ scale: 0, rotate: -180 }}
+animate={{ scale: 1, rotate: 0 }}
+transition={{ type: "spring", stiffness: 200, damping: 20 }}
+className="relative"
+>
+{/* Floating Gradient Orb */}
+<div className="absolute inset-0 blur-3xl">
+<div className="w-64 h-64 bg-gradient-to-r from-purple-400 to-teal-400 rounded-full opacity-40 animate-pulse" />
+</div>
 
-  if (cart.length === 0) {
-    return (
-      <div className="p-8 text-center">
-        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-black/70 text-lg">Your cart is empty</p>
-        <Link href="/deals">
-          <button className="mt-4 text-primary font-medium underline">Browse Deals</button>
-        </Link>
-      </div>
-    );
-  }
+{/* Main Bag Icon */}
+<motion.div
+initial={{ y: 20 }}
+animate={{ y: [0, -20, 0] }}
+transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+className="relative z-10 bg-white/90 backdrop-blur-xl rounded-3xl p-12 shadow-2xl border border-purple-100"
+>
+<ShoppingBag className="w-28 h-28 mx-auto text-purple-600" strokeWidth={1.5} />
+</motion.div>
 
-  return (
-    <>
-      {/* TOP BAR */}
-      <div className="sticky top-0 bg-white z-40 border-b shadow-sm">
-        <div className="flex items-center justify-between p-4">
-          {/* ✅ BACK BUTTON NOW DYNAMIC */}
-          <button onClick={() => router.back()} className="text-black">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-black">Cart ({cart.length})</h1>
-          <button onClick={clearCart} className="text-red-500 text-sm font-medium">
-            Clear
-          </button>
-        </div>
-      </div>
+{/* Floating Sparkles */}
+{[...Array(6)].map((_, i) => (
+<motion.div
+key={i}
+initial={{ opacity: 0, scale: 0 }}
+animate={{
+opacity: [0.3, 1, 0.3],
+scale: [0, 1.5, 0],
+x: Math.cos(i * 60 * Math.PI / 180) * 80,
+y: Math.sin(i * 60 * Math.PI / 180) * 80,
+}}
+transition={{
+duration: 3,
+repeat: Infinity,
+delay: i * 0.3,
+ease: "easeOut",
+}}
+className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+>
+<Sparkles className="w-8 h-8 text-purple-500" />
+</motion.div>
+))}
+</motion.div>
 
-      <div className="p-4 pb-32 space-y-4">
-        {/* CART ITEMS */}
-        {cart.map((item) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="bg-surface rounded-xl p-4 flex gap-3 shadow-sm"
-          >
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              <Image src={`/images/${item.img}`} alt={item.title} fill className="object-cover" />
-            </div>
+{/* Text */}
+<motion.div
+initial={{ opacity: 0, y: 30 }}
+animate={{ opacity: 1, y: 0 }}
+transition={{ delay: 0.5 }}
+className="text-center mt-12"
+>
+<h2 className="text-4xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent mb-3">
+Your cart is empty
+</h2>
+<p className="text-lg text-gray-600 mb-8">
+Time to add some glow to your life
+</p>
 
-            <div className="flex-1">
-              <p className="font-medium text-black line-clamp-2">{item.title}</p>
-              <p className="text-sm text-black/60">₦{item.price.toLocaleString()} each</p>
-              <p className="text-lg font-bold text-red-500 mt-1">
-                ₦{(item.price * item.quantity).toLocaleString()}
-              </p>
-            </div>
+{/* Gradient CTA Button */}
+<Link href="/categories">
+<motion.button
+whileHover={{ scale: 1.05 }}
+whileTap={{ scale: 0.95 }}
+className="px-10 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-xl rounded-full shadow-2xl flex items-center gap-3 mx-auto"
+>
+Browse Categories
+<ArrowRight className="w-6 h-6" />
+</motion.button>
+</Link>
+</motion.div>
+</div>
+);
+}
 
-            {/* QUANTITY */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                className="p-1 bg-white rounded-full shadow-sm hover:shadow transition-shadow"
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="w-8 text-center font-medium">{item.quantity}</span>
-              <button
-                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                className="p-1 bg-white rounded-full shadow-sm hover:shadow transition-shadow"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
+// NON-EMPTY CART (your existing beautiful cart)
+return (
+<>
+{/* TOP BAR */}
+<div className="sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b">
+<div className="flex items-center justify-between p-5">
+<button onClick={() => router.back()} className="p-3 rounded-full bg-purple-100 hover:bg-purple-200 transition-all active:scale-95">
+<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+</svg>
+</button>
+<h1 className="text-xl font-black text-gray-900">Cart ({cart.length})</h1>
+<button onClick={clearCart} className="text-red-500 font-bold text-sm">
+Clear All
+</button>
+</div>
+</div>
 
-            {/* REMOVE */}
-            <button
-              onClick={() => removeFromCart(item.id)}
-              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </motion.div>
-        ))}
+<div className="p-5 pb-32 space-y-5">
+{cart.map((item, i) => (
+<motion.div
+key={item.id}
+initial={{ opacity: 0, x: -30 }}
+animate={{ opacity: 1, x: 0 }}
+transition={{ delay: i * 0.1 }}
+className="bg-white rounded-3xl p-5 shadow-lg border border-purple-100 flex gap-4"
+>
+<div className="relative w-24 h-24 rounded-2xl overflow-hidden ring-2 ring-purple-100">
+<Image src={`/images/${item.img}`} alt={item.title} fill className="object-cover" />
+</div>
 
-        {/* TOTAL & CHECKOUT */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl p-5 shadow-lg"
-        >
-          <div className="flex justify-between text-xl font-bold text-black mb-4">
-            <span>Total</span>
-            <span className="text-red-500">₦{total.toLocaleString()}</span>
-          </div>
+<div className="flex-1">
+<h3 className="font-black text-lg">{item.title}</h3>
+<p className="text-sm text-gray-600">₦{item.price.toLocaleString()} each</p>
+<p className="text-2xl font-black text-purple-600 mt-1">
+₦{(item.price * item.quantity).toLocaleString()}
+</p>
+</div>
 
-          {/* CHECKOUT BUTTON → /checkout */}
-          <Link href="/checkout">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full bg-primary text-white py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-            >
-              Proceed to Checkout
-              <ArrowRight className="w-5 h-5" />
-            </motion.button>
-          </Link>
-        </motion.div>
-      </div>
+<div className="flex flex-col justify-between items-end gap-4">
+<div className="flex items-center gap-3 bg-purple-50 rounded-full px-4 py-2">
+<button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}>
+<Minus className="w-5 h-5 text-purple-600" />
+</button>
+<span className="font-black text-purple-700 w-8 text-center">{item.quantity}</span>
+<button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+<Plus className="w-5 h-5 text-purple-600" />
+</button>
+</div>
 
-      {/* BOTTOM NAV */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-50 shadow-lg">
-        <div className="flex justify-around py-2">
-          <Link href="/" className="text-black/60"><span className="text-xs">Home</span></Link>
-          <Link href="/categories" className="text-black/60"><span className="text-xs">Categories</span></Link>
-          <Link href="/cart" className="text-primary font-bold"><span className="text-xs">Cart</span></Link>
-          <Link href="/wishlist" className="text-black/60"><span className="text-xs">Wishlist</span></Link>
-          <Link href="/account" className="text-black/60"><span className="text-xs">Account</span></Link>
-        </div>
-      </div>
-    </>
-  );
+<button onClick={() => removeFromCart(item.id)} className="text-red-500">
+<Trash2 className="w-6 h-6" />
+</button>
+</div>
+</motion.div>
+))}
+
+{/* TOTAL & CHECKOUT */}
+<motion.div
+initial={{ y: 40, opacity: 0 }}
+animate={{ y: 0, opacity: 1 }}
+transition={{ delay: 0.3 }}
+className="bg-gradient-to-r from-purple-600 to-teal-600 rounded-3xl p-6 text-white shadow-2xl"
+>
+<div className="flex justify-between items-center mb-6">
+<p className="text-2xl font-black">Total</p>
+<p className="text-4xl font-black">₦{total.toLocaleString()}</p>
+</div>
+
+<Link href="/checkout">
+<motion.button
+whileHover={{ scale: 1.02 }}
+whileTap={{ scale: 0.98 }}
+className="w-full py-5 bg-white text-purple-600 font-black text-xl rounded-3xl shadow-xl flex items-center justify-center gap-3"
+>
+Checkout Now <ArrowRight className="w-6 h-6" />
+</motion.button>
+</Link>
+</motion.div>
+</div>
+
+{/* BOTTOM NAV */}
+<nav className="bottom-nav-safe">
+<div className="flex justify-around items-center h-full px-6">
+<Link href="/home" className="text-gray-600"><span className="text-xs font-medium">Home</span></Link>
+<Link href="/categories" className="text-gray-600"><span className="text-xs font-medium">Categories</span></Link>
+<div className="relative">
+<span className="text-xs font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">Cart</span>
+<motion.div layoutId="activeTab" className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-gradient-to-r from-purple-600 to-teal-600 rounded-full shadow-lg" />
+</div>
+<Link href="/book" className="text-gray-600"><span className="text-xs font-medium">Bookings</span></Link>
+<Link href="/profile" className="text-gray-600"><span className="text-xs font-medium">Profile</span></Link>
+</div>
+</nav>
+</>
+);
 }

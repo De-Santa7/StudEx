@@ -1,171 +1,282 @@
-// src/app/laundry/[id]/page.tsx
+// src/app/laundry/[id]/page.tsx  ← FINAL FIXED VERSION
+
 "use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
-import { Star, Heart, ChevronLeft, Plus, Truck, Clock } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCartStore } from "@/lib/cartStore";
-import { useWishlistStore } from "@/lib/wishlistStore";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { 
+  Star, MapPin, Clock, Truck, Shield, MessageCircle, 
+  ChevronLeft, CheckCircle, Package, Zap, Shirt,
+  Send   // ← THIS WAS MISSING
+} from "lucide-react";
+import { useState } from "react";
 
-const laundryData: Record<string, any> = {
-  "1": { title: "Wash + Fold (10kg)", price: 3000, img: "wash-fold.jpg", vendor: "FreshFold OAU", desc: "Professional wash, dry & perfectly folded. Includes pickup & delivery.", duration: "24-48 hrs", rating: 4.9, reviews: 892 },
-  "2": { title: "Wash + Iron (5kg)", price: 4000, img: "wash-iron.jpg", vendor: "PressKing", desc: "Washed, dried, and crisply ironed. Ready to wear.", duration: "24-36 hrs", rating: 4.9, reviews: 761 },
-  "3": { title: "Dry Cleaning (Native)", price: 2500, img: "dry-clean.jpg", vendor: "CleanQueen", desc: "Gentle dry clean for your ankara, lace, and traditional outfits.", duration: "48 hrs", rating: 4.8, reviews: 543 },
-  "4": { title: "Express 24hr (5kg)", price: 6000, img: "express-laundry.jpg", vendor: "Spin & Glow", desc: "Same-day rush service. Drop off morning, collect evening.", duration: "24 hrs", rating: 5.0, reviews: 1021 },
+const vendors: Record<string, any> = {
+  freshfold: {
+    id: "freshfold",
+    name: "FreshFold OAU",
+    rating: 4.9,
+    reviews: 892,
+    responseTime: "12 mins",
+    turnaround: "24–48 hrs",
+    price: "From ₦3,000",
+    location: "Moremi Hall Basement",
+    verified: true,
+    express: true,
+    img: "laundry-vendor-1.jpg",
+    bio: "Campus #1 laundry since 2022. We handle 500+ kg weekly. Free pickup & delivery in 30 mins. Same-day express available.",
+    services: [
+      { name: "Wash + Fold (10kg)", price: 3000 },
+      { name: "Wash + Iron (5kg)", price: 4000 },
+      { name: "Express 24hr (5kg)", price: 6000 },
+      { name: "Dry Cleaning (per piece)", price: 2500 },
+      { name: "Bedding Set (Duvet + Sheets)", price: 5000 },
+    ],
+    portfolio: ["freshfold-1.jpg", "freshfold-2.jpg", "freshfold-3.jpg", "freshfold-4.jpg", "freshfold-5.jpg", "freshfold-6.jpg"],
+    bookings: "1,200+",
+  },
+  pressking: {
+    id: "pressking",
+    name: "PressKing Laundry",
+    rating: 4.9,
+    reviews: 756,
+    responseTime: "15 mins",
+    turnaround: "24–36 hrs",
+    price: "From ₦4,000",
+    location: "SUB Gate",
+    verified: true,
+    express: true,
+    img: "laundry-vendor-4.jpg",
+    bio: "Crisp ironing specialists. Your native wears, shirts & suits come back runway ready.",
+    services: [
+      { name: "Wash + Iron (5kg)", price: 4000 },
+      { name: "Native Wear Press", price: 3000 },
+      { name: "Suit Dry Clean", price: 8000 },
+      { name: "Express Ironing", price: 5000 },
+    ],
+    portfolio: ["pressking-1.jpg", "pressking-2.jpg", "pressking-3.jpg", "pressking-4.jpg"],
+  },
+  cleanqueen: {
+    id: "cleanqueen",
+    name: "CleanQueen",
+    rating: 4.8,
+    reviews: 643,
+    responseTime: "18 mins",
+    turnaround: "36–48 hrs",
+    price: "From ₦2,500",
+    location: "Angola Hall",
+    verified: true,
+    express: false,
+    img: "laundry-vendor-2.jpg",
+    bio: "Gentle care for your delicate fabrics. Ankara, lace, silk — we treat them like royalty.",
+    services: [
+      { name: "Dry Cleaning (Native)", price: 2500 },
+      { name: "Lace & Ankara Care", price: 3500 },
+      { name: "Curtains & Beddings", price: 6000 },
+    ],
+  },
 };
 
-export default function LaundryDetail() {
+export default function LaundryVendorProfile() {
   const router = useRouter();
   const { id } = useParams();
-  const laundryId = Array.isArray(id) ? id[0] : id;
-  const service = laundryData[laundryId] || laundryData["1"];
-  const numericId = parseInt(laundryId);
+  const vendorId = Array.isArray(id) ? id[0] : id;
+  const vendor = vendors[vendorId] || vendors.freshfold;
 
-  const [localWishlist, setLocalWishlist] = useState<Set<number>>(new Set());
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
 
-  const addToCart = useCartStore((s) => s.addToCart);
-  const addToWishlist = useWishlistStore((s) => s.addToWishlist);
-  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
-
-  useEffect(() => {
-    const items = useWishlistStore.getState().items ?? [];
-    setLocalWishlist(new Set(items.map(i => i.id)));
-  }, []);
-
-  useEffect(() => {
-    const unsub = useWishlistStore.subscribe((state) => {
-      setLocalWishlist(new Set(state.items?.map(i => i.id) || []));
-    });
-    return unsub;
-  }, []);
-
-  const isInWishlist = useMemo(() => localWishlist.has(numericId), [localWishlist, numericId]);
-
-  const showToast = useCallback((msg: string, isWishlist = false) => {
-    const toast = document.createElement("div");
-    toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-8 py-4 rounded-full shadow-2xl z-50 font-black text-white text-lg backdrop-blur-md ${isWishlist ? "bg-gradient-to-r from-pink-500 to-rose-500" : "bg-gradient-to-r from-purple-600 to-teal-600"}`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2200);
-  }, []);
-
-  const handleAddToCart = useCallback(() => {
-    addToCart({ 
-      id: numericId, 
-      title: service.title, 
-      price: service.price, 
-      img: service.img, 
-      category: "Laundry" 
-    });
-    showToast("Added to Cart!");
-  }, [addToCart, numericId, service, showToast]);
-
-  const handleWishlist = useCallback(() => {
-    if (isInWishlist) {
-      removeFromWishlist(numericId);
-      setLocalWishlist(prev => { const n = new Set(prev); n.delete(numericId); return n; });
-      showToast("Removed from Wishlist", true);
-    } else {
-      addToWishlist({ id: numericId, title: service.title, price: service.price, img: service.img });
-      setLocalWishlist(prev => new Set(prev).add(numericId));
-      showToast("Added to Wishlist", true);
-    }
-  }, [isInWishlist, removeFromWishlist, addToWishlist, numericId, service, showToast]);
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    setMessages(prev => [...prev, message]);
+    setMessage("");
+  };
 
   return (
     <>
-      {/* TOP BAR */}
-      <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b border-gray-100">
-        <div className="flex items-center p-4">
-          <button onClick={() => router.back()} className="p-3 hover:bg-purple-100 rounded-full transition">
-            <ChevronLeft className="w-7 h-7 text-purple-600" />
-          </button>
-          <h1 className="ml-3 text-xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-            Laundry Detail
-          </h1>
-        </div>
-      </motion.div>
+      <div className="min-h-screen bg-gray-50 pb-32">
 
-      <div className="p-6 space-y-8 pb-32">
-        {/* HERO IMAGE */}
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="relative h-80 rounded-3xl overflow-hidden shadow-2xl">
-          <Image src={`/images/${service.img}`} alt={service.title} fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-          
-          {/* Floating Heart */}
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleWishlist}
-            className="absolute top-4 right-4 p-4 bg-white/90 backdrop-blur rounded-full shadow-xl">
-            <Heart className={`w-7 h-7 ${isInWishlist ? "fill-pink-500 text-pink-500" : "text-gray-700"}`} />
-          </motion.button>
-
-          {/* Pickup + Delivery Badge */}
-          <div className="absolute bottom-4 left-4 px-5 py-3 bg-white/90 backdrop-blur rounded-full shadow-xl flex items-center gap-2">
-            <Truck className="w-6 h-6 text-teal-600" />
-            <p className="font-black text-purple-600">Free Pickup & Delivery</p>
-          </div>
-        </motion.div>
-
-        {/* CONTENT */}
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-black text-gray-900">{service.title}</h1>
-            <p className="text-lg text-gray-600 mt-1">by <span className="font-bold text-purple-600">{service.vendor}</span></p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-yellow-500 fill-current" />
-              <span className="text-xl font-black">{service.rating}</span>
-            </div>
-            <span className="text-gray-500">({service.reviews} reviews)</span>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Clock className="w-5 h-5" />
-              <span className="font-medium">{service.duration}</span>
-            </div>
-          </div>
-
-          <p className="text-base text-gray-700 leading-relaxed">{service.desc}</p>
-
-          <div className="text-4xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-            ₦{service.price.toLocaleString()}
+        {/* TOP BAR */}
+        <div className="sticky top-0 bg-white/95 backdrop-blur-2xl z-50 border-b">
+          <div className="flex items-center justify-between p-4">
+            <button onClick={() => router.back()} className="p-3 hover:bg-purple-100 rounded-full transition active:scale-95">
+              <ChevronLeft className="w-8 h-8 text-purple-700" />
+            </button>
+            <h1 className="text-xl font-black text-gray-900">{vendor.name}</h1>
+            <div className="w-12" />
           </div>
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex gap-4 pt-6">
-          <motion.button 
-            whileHover={{ scale: 1.02 }} 
-            whileTap={{ scale: 0.98 }} 
-            onClick={handleAddToCart}
-            className="flex-1 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-xl rounded-2xl shadow-2xl flex items-center justify-center gap-3"
-          >
-            <Plus className="w-7 h-7" />
-            Book Service
-          </motion.button>
+        {/* HERO */}
+        <div className="relative h-80">
+          <Image src={`/images/${vendor.img}`} alt={vendor.name} fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-          <motion.button 
-            whileHover={{ scale: 1.1 }} 
-            whileTap={{ scale: 0.9 }} 
-            onClick={handleWishlist}
-            className="p-5 bg-gradient-to-r from-pink-100 to-rose-100 rounded-2xl shadow-xl"
+          {vendor.express && (
+            <div className="absolute top-8 right-6 bg-orange-500 text-white font-black px-5 py-2 rounded-full shadow-2xl animate-pulse text-sm">
+              24hr Express Available
+            </div>
+          )}
+
+          <div className="absolute bottom-6 left-6 text-white">
+            <h1 className="text-4xl font-black drop-shadow-2xl">{vendor.name}</h1>
+            {vendor.verified && (
+              <div className="flex items-center gap-2 mt-2">
+                <CheckCircle className="w-7 h-7 text-blue-400 drop-shadow-lg" />
+                <span className="font-black text-lg">Verified Service</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* STATS */}
+        <div className="px-6 -mt-10 relative z-10">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white rounded-3xl shadow-2xl p-6 border-2 border-purple-100"
           >
-            <Heart className={`w-8 h-8 ${isInWishlist ? "fill-pink-500 text-pink-500" : "text-gray-600"}`} />
-          </motion.button>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Star className="w-9 h-9 text-yellow-500 fill-current" />
+                <div>
+                  <span className="text-3xl font-black">{vendor.rating}</span>
+                  <span className="text-gray-600 ml-2">({vendor.reviews} reviews)</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-black text-purple-600">{vendor.price}</p>
+                <p className="text-sm text-gray-600">Starting price</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-6 h-6 text-purple-600" />
+                <span className="font-bold">{vendor.location}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Clock className="w-6 h-6 text-teal-600" />
+                <span className="font-bold">Replies in {vendor.responseTime}</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="px-6 mt-8 space-y-8">
+
+          {/* ABOUT */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+            <h2 className="text-2xl font-black mb-4">About</h2>
+            <p className="text-gray-700 text-lg leading-relaxed">{vendor.bio}</p>
+          </motion.div>
+
+          {/* SERVICES */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+            <h2 className="text-2xl font-black mb-4">Services & Pricing</h2>
+            <div className="space-y-3">
+              {vendor.services.map((s: any, i: number) => (
+                <div key={i} className="bg-white rounded-2xl p-5 flex justify-between items-center shadow-md border border-purple-50">
+                  <div>
+                    <p className="font-black text-lg">{s.name}</p>
+                  </div>
+                  <p className="text-2xl font-black text-purple-600">₦{s.price.toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* PORTFOLIO */}
+          {vendor.portfolio && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+              <h2 className="text-2xl font-black mb-4">Before & After</h2>
+              <div className="grid grid-cols-3 gap-3">
+                {vendor.portfolio.map((img: string, i: number) => (
+                  <div key={i} className="relative aspect-square rounded-2xl overflow-hidden shadow-xl ring-2 ring-purple-100">
+                    <Image src={`/images/${img}`} alt="Result" fill className="object-cover hover:scale-110 transition-transform duration-500" />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* CTA */}
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.6 }} className="space-y-4">
+            <Link href={`/laundry/${vendorId}/book`}>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.96 }}
+                className="w-full py-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-2xl rounded-3xl shadow-2xl flex items-center justify-center gap-4"
+              >
+                <Truck className="w-9 h-9" /> Book Pickup Now
+              </motion.button>
+            </Link>
+
+            <button className="w-full py-5 border-4 border-purple-300 text-purple-700 font-black text-xl rounded-3xl hover:bg-purple-50 transition">
+              <MessageCircle className="w-7 h-7 inline mr-2" /> Chat with {vendor.name.split(" ")[0]}
+            </button>
+          </motion.div>
+
+          {/* ESCROW */}
+          <div className="bg-gradient-to-r from-purple-50 to-teal-50 rounded-3xl p-6 text-center border-2 border-purple-200">
+            <Shield className="w-14 h-14 text-purple-600 mx-auto mb-3" />
+            <p className="font-black text-xl">100% Escrow Protected</p>
+            <p className="text-gray-700 mt-1">Pay only when your clothes come back FRESH</p>
+          </div>
+
+          {/* QUICK CHAT */}
+          <div className="bg-white rounded-3xl shadow-2xl border-2 border-purple-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-teal-600 text-white p-6">
+              <h3 className="text-xl font-black">Quick Chat</h3>
+              <p className="text-sm opacity-90">Ask about pickup time, detergent, or special care</p>
+            </div>
+
+            <div className="h-64 overflow-y-auto p-5 space-y-4">
+              {messages.length === 0 ? (
+                <p className="text-center text-gray-400 mt-20 text-lg">Say hi and book your laundry</p>
+              ) : (
+                messages.map((msg, i) => (
+                  <div key={i} className="flex justify-end">
+                    <div className="bg-gradient-to-r from-purple-600 to-teal-600 text-white rounded-3xl rounded-br-none px-6 py-4 max-w-xs shadow-lg">
+                      {msg}
+                      <p className="text-xs opacity-70 text-right mt-1">Seen</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder="e.g. Can you pick up tomorrow 10AM?"
+                  className="flex-1 bg-white border-2 border-purple-200 rounded-full px-6 py-4 focus:outline-none focus:border-purple-500 transition"
+                />
+                <button onClick={sendMessage} className="w-14 h-14 bg-gradient-to-r from-purple-600 to-teal-600 rounded-full flex items-center justify-center shadow-2xl active:scale-95">
+                  <Send className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM NAV */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t z-50 shadow-2xl">
+          <div className="flex justify-around py-3">
+            <Link href="/" className="text-gray-500 text-xs">Home</Link>
+            <Link href="/categories" className="text-gray-500 text-xs">Categories</Link>
+            <Link href="/laundry" className="text-purple-600 font-black text-sm">Laundry</Link>
+            <Link href="/bookings" className="text-gray-500 text-xs">Bookings</Link>
+            <Link href="/account" className="text-gray-500 text-xs">Account</Link>
+          </div>
         </div>
       </div>
-
-      {/* BOTTOM NAV */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
-        <div className="flex justify-around py-3">
-          <div className="text-gray-500 text-xs">Home</div>
-          <div className="text-purple-600 font-black text-sm">Laundry</div>
-          <div className="text-gray-500 text-xs">Cart</div>
-          <div className="text-gray-500 text-xs">Wishlist</div>
-          <div className="text-gray-500 text-xs">Account</div>
-        </div>
-      </motion.div>
     </>
   );
 }

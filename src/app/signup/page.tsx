@@ -53,7 +53,7 @@ export default function UserSignup() {
         login({ username: form.username, identifier: form.identifier });
         localStorage.setItem("userProfile", JSON.stringify(form));
         setMessage("Welcome to StudEx!");
-        setTimeout(() => router.push("/"), 1500);
+        setTimeout(() => router.push("/home"), 1500);
       } else {
         setMessage("Wrong OTP. Try again.");
       }

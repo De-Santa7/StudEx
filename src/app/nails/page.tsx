@@ -1,117 +1,101 @@
-// src/app/nails/page.tsx
+// src/app/nails/page.tsx  ← FINAL NAILS PAGE (PURPLE-TEAL GRADIENT, IDENTICAL TO LASHES)
+
 "use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Package, Clock, Star, Filter, Search, Plus, Heart, X, MapPin, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { useCartStore } from "@/lib/cartStore";
-import { useWishlistStore } from "@/lib/wishlistStore";
+import { Star, Clock, MapPin, MessageCircle, Calendar, Filter, Search, ChevronLeft, X, Sparkles } from "lucide-react";
+import { useState, useMemo } from "react";
 
-const vendors = [
-  { id: 1, name: "Queen Nails by Temi", rating: 4.9, time: "45-60", img: "nails-vendor-1.jpg", dishes: 24, location: "Angola Hall Basement" },
-  { id: 2, name: "Glow Studio", rating: 4.8, time: "50-70", img: "nails-vendor-2.jpg", dishes: 28, location: "Moremi Block C" },
-  { id: 3, name: "Nail Bae OAU", rating: 4.7, time: "40-55", img: "nails-vendor-3.jpg", dishes: 19, location: "Fajuyi Hall" },
-  { id: 4, name: "Chrome Queen", rating: 4.8, time: "60-90", img: "nails-vendor-4.jpg", dishes: 22, location: "Postgraduate Hall" },
-];
-
-const popular = [
-  { id: 1, title: "Gel Manicure", price: 6000, img: "gel-manicure.jpg", vendor: "Queen Nails", rating: 4.9 },
-  { id: 2, title: "Acrylic Full Set", price: 10000, img: "acrylic-nails.jpg", vendor: "Glow Studio", rating: 4.8 },
-  { id: 3, title: "Chrome Nails", price: 8500, img: "chrome-nails.jpg", vendor: "Chrome Queen", rating: 4.9 },
-  { id: 4, title: "French Tips Classic", price: 5500, img: "french-tips.jpg", vendor: "Nail Bae OAU", rating: 4.7 },
+const nailTechs = [
+  {
+    id: "temi",
+    name: "Queen Nails by Temi",
+    rating: 4.9,
+    reviews: 189,
+    responseTime: "8 mins",
+    duration: "45–90 mins",
+    price: "From ₦7,500",
+    location: "Angola Hall Basement",
+    img: "nails-vendor-1.jpg",
+    verified: true,
+    styles: 32,
+  },
+  {
+    id: "glow",
+    name: "Glow Studio",
+    rating: 4.8,
+    reviews: 143,
+    responseTime: "12 mins",
+    duration: "50–100 mins",
+    price: "From ₦8,500",
+    location: "Moremi Block C",
+    img: "nails-vendor-2.jpg",
+    verified: true,
+    styles: 28,
+  },
+  {
+    id: "nailbae",
+    name: "Nail Bae OAU",
+    rating: 4.7,
+    reviews: 112,
+    responseTime: "15 mins",
+    duration: "40–80 mins",
+    price: "From ₦6,000",
+    location: "Fajuyi Hall",
+    img: "nails-vendor-3.jpg",
+    verified: false,
+    styles: 19,
+  },
+  {
+    id: "chrome",
+    name: "Chrome Queen",
+    rating: 4.9,
+    reviews: 98,
+    responseTime: "10 mins",
+    duration: "60–120 mins",
+    price: "From ₦9,000",
+    location: "Postgraduate Hall",
+    img: "nails-vendor-4.jpg",
+    verified: true,
+    styles: 26,
+  },
 ];
 
 export default function NailsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [localWishlist, setLocalWishlist] = useState<Set<number>>(new Set());
 
-  const addToCart = useCartStore((state) => state.addToCart);
-  const addToWishlist = useWishlistStore((state) => state.addToWishlist);
-  const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
-
-  useEffect(() => {
-    const items = useWishlistStore.getState().items ?? [];
-    setLocalWishlist(new Set(items.map(i => i.id)));
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = useWishlistStore.subscribe((state) => {
-      setLocalWishlist(new Set(state.items?.map(i => i.id) || []));
-    });
-    return unsubscribe;
-  }, []);
-
-  const isInWishlist = useCallback((id: number) => localWishlist.has(id), [localWishlist]);
-
-  const showToast = useCallback((msg: string, isWishlist = false) => {
-    const toast = document.createElement("div");
-    toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-8 py-4 rounded-full shadow-2xl z-50 font-black text-white text-lg backdrop-blur-md ${isWishlist ? "bg-gradient-to-r from-pink-500 to-rose-500" : "bg-gradient-to-r from-purple-600 to-teal-600"}`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-  }, []);
-
-  const handleAddToCart = useCallback((item: any, e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
-    addToCart(item);
-    showToast("Added to Cart!");
-  }, [addToCart, showToast]);
-
-  const handleWishlist = useCallback((item: any, e: React.MouseEvent) => {
-    e.preventDefault(); e.stopPropagation();
-    if (isInWishlist(item.id)) {
-      removeFromWishlist(item.id);
-      setLocalWishlist(prev => { const n = new Set(prev); n.delete(item.id); return n; });
-      showToast("Removed from Wishlist", true);
-    } else {
-      addToWishlist(item);
-      setLocalWishlist(prev => new Set(prev).add(item.id));
-      showToast("Added to Wishlist", true);
-    }
-  }, [isInWishlist, addToWishlist, removeFromWishlist, showToast]);
-
-  const filteredVendors = useMemo(() =>
-    vendors.filter(v =>
-      v.name.toLowerCase().includes(search.toLowerCase()) ||
-      v.location.toLowerCase().includes(search.toLowerCase())
-    ), [search]
-  );
+  const filteredTechs = useMemo(() => {
+    return nailTechs.filter(tech =>
+      tech.name.toLowerCase().includes(search.toLowerCase()) ||
+      tech.location.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
 
   return (
     <>
       {/* TOP BAR */}
       <motion.div
-        initial={{ y: -30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="sticky top-0 bg-white/90 backdrop-blur-xl z-50 border-b shadow-sm"
+        initial={{ y: -30 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b shadow-sm"
       >
         <div className="flex items-center justify-between p-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-purple-100 rounded-full transition">
             <ChevronLeft className="w-7 h-7 text-purple-600" />
           </button>
-
-          {/* Better Logo */}
-          <Link href="/" className="relative w-28 h-12 flex-shrink-0">
-            <Image
-              src="/images/logo-1.jpg"
-              alt="StudEx"
-              fill
-              className="object-contain"
-              priority
-            />
+          <Link href="/" className="relative w-32 h-12">
+            <Image src="/images/logo-1.jpg" alt="StudEx" fill className="object-contain" priority />
           </Link>
-
           <div className="w-10" />
         </div>
 
-        <h1 className="text-center text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent pb-3">
-          Nails & Beauty
+        <h1 className="text-center text-3xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent pb-4">
+          Nails
         </h1>
 
         {/* SEARCH + FILTER */}
@@ -120,118 +104,102 @@ export default function NailsPage() {
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-500" />
             <input
               type="text"
-              placeholder="Search nail tech or location..."
+              placeholder="Search tech or hostel..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all"
+              className="w-full pl-12 pr-4 py-3.5 bg-gray-100 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-300 transition"
             />
           </div>
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="p-3.5 bg-gradient-to-r from-purple-100 to-teal-100 rounded-full hover:scale-105 transition"
-          >
+          <button onClick={() => setFilterOpen(true)} className="p-3.5 bg-gradient-to-r from-purple-100 to-teal-100 rounded-full">
             <Filter className="w-6 h-6 text-purple-600" />
           </button>
         </div>
       </motion.div>
 
-      <div className="p-6 space-y-10 pb-32">
+      {/* MAIN CONTENT */}
+      <div className="px-6 pt-6 pb-32 space-y-8">
 
-        {/* TRENDING NAILS */}
-        <section>
-          <h2 className="text-xl font-black text-gray-800 mb-5 flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-purple-600" />
-            Trending on Campus
-          </h2>
-          <div className="grid grid-cols-2 gap-5">
-            {popular.map((item, i) => (
-              <Link href={`/nails/${item.id}`} key={item.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ y: -6, scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden relative group"
-                >
-                  <div className="relative h-48">
-                    <Image src={`/images/${item.img}`} alt={item.title} fill className="object-cover group-hover:scale-110 transition" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  </div>
-
-                  <button
-                    onClick={(e) => handleAddToCart({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute top-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
-                  >
-                    <Plus className="w-5 h-5 text-purple-600" />
-                  </button>
-
-                  <button
-                    onClick={(e) => handleWishlist({ id: item.id, title: item.title, price: item.price, img: item.img }, e)}
-                    className="absolute bottom-3 right-3 p-3 bg-white/90 backdrop-blur rounded-full shadow-xl"
-                  >
-                    <Heart className={`w-5 h-5 transition-all ${isInWishlist(item.id) ? "fill-pink-500 text-pink-500 scale-110" : "text-gray-600"}`} />
-                  </button>
-
-                  <div className="p-4 pt-3">
-                    <p className="font-black text-gray-900">{item.title}</p>
-                    <p className="text-sm text-gray-600">by {item.vendor}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="font-bold text-sm">{item.rating}</span>
-                    </div>
-                    <p className="text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent mt-2">
-                      ₦{item.price.toLocaleString()}
-                    </p>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* HERO BANNER — PURPLE TO TEAL */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-purple-600 to-teal-600 text-white rounded-3xl p-8 text-center shadow-2xl"
+        >
+          <h2 className="text-3xl font-black mb-3">Slay-Worthy Nails</h2>
+          <p className="text-lg opacity-95">Chrome • 3D • Ombré • Same-day booking • Escrow protected</p>
+        </motion.div>
 
         {/* TOP NAIL TECHS */}
         <section>
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-xl font-black text-gray-800">Top Nail Techs</h2>
-            <Link href="/nails/techs" className="text-purple-600 font-bold text-sm flex items-center gap-1">
-              See All <ChevronRight className="w-4 h-4" />
-            </Link>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-black flex items-center gap-3">
+              <Sparkles className="w-8 h-8 text-purple-600" />
+              Top Nail Techs
+            </h2>
+            <span className="text-sm text-gray-600">{filteredTechs.length} available</span>
           </div>
 
-          <div className="space-y-4">
-            {filteredVendors.map((v, i) => (
-              <Link href={`/nails/tech/${v.id}`} key={v.id}>
+          <div className="space-y-5">
+            {filteredTechs.map((tech, i) => (
+              <Link href={`/nails/${tech.id}`} key={tech.id}>
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -30 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
-                  whileHover={{ x: 6 }}
-                  className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 flex items-center gap-5"
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ x: 8 }}
+                  className="bg-white rounded-3xl shadow-xl border border-purple-100 overflow-hidden flex"
                 >
-                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-4 ring-purple-100">
-                    <Image src={`/images/${v.img}`} alt={v.name} fill className="object-cover" />
+                  {/* Image */}
+                  <div className="relative w-32 h-40 flex-shrink-0">
+                    <Image
+                      src={`/images/${tech.img}`}
+                      alt={tech.name}
+                      fill
+                      className="object-cover"
+                    />
+                    {tech.verified && (
+                      <div className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-black px-2 py-1 rounded-full">
+                        Verified
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-black text-lg text-gray-900">{v.name}</h3>
-                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                      <MapPin className="w-4 h-4" /> {v.location}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-5 h-5 text-yellow-500 fill-current" />
-                        <span className="font-bold">{v.rating}</span>
+
+                  {/* Details */}
+                  <div className="flex-1 p-5 pr-6 flex flex-col justify-between">
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900">{tech.name}</h3>
+                      <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                        <MapPin className="w-4 h-4" /> {tech.location}
+                      </p>
+
+                      <div className="flex items-center gap-4 mt-3 text-sm">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                          <span className="font-bold">{tech.rating}</span>
+                          <span className="text-gray-500">({tech.reviews})</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-5 h-5 text-teal-600" />
+                          <span>{tech.responseTime} reply</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-5 h-5 text-teal-600" />
-                        <span>{v.time} mins</span>
+
+                      <div className="mt-4 flex items-center gap-4">
+                        <span className="text-2xl font-black text-purple-600">{tech.price}</span>
+                        <span className="text-sm text-grays-600">{tech.duration} • {tech.styles} styles</span>
                       </div>
-                      <span className="text-gray-600">{v.dishes} styles</span>
+                    </div>
+
+                    {/* ACTION BUTTONS — PURPLE-TEAL GRADIENT */}
+                    <div className="flex gap-3 mt-5">
+                      <button className="flex-1 bg-gray-100 text-purple-600 font-black py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-purple-100 transition">
+                        <MessageCircle className="w-5 h-5" /> Message
+                      </button>
+                      <button className="flex-1 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black py-3 rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition">
+                        <Calendar className="w-5 h-5" /> Book Now
+                      </button>
                     </div>
                   </div>
-                  <ChevronRight className="w-6 h-6 text-purple-400" />
                 </motion.div>
               </Link>
             ))}
@@ -239,7 +207,7 @@ export default function NailsPage() {
         </section>
       </div>
 
-      {/* FILTER MODAL */}
+      {/* FILTER MODAL — PURPLE-TEAL */}
       {filterOpen && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -250,15 +218,19 @@ export default function NailsPage() {
           <motion.div
             initial={{ y: 400 }}
             animate={{ y: 0 }}
-            transition={{ type: "spring", stiffness: 250, damping: 25 }}
-            className="bg-white rounded-t-3xl p-6 w-full"
-            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-t-3xl p-8 w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">Filters</h3>
-              <button onClick={() => setFilterOpen(false)}><X className="w-7 h-7" /></button>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+                Filters
+              </h3>
+              <button onClick={() => setFilterOpen(false)}>
+                <X className="w-8 h-8" />
+              </button>
             </div>
-            <button className="w-full py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-lg rounded-2xl shadow-xl">
+            <p className="text-center text-gray-600">Filters coming soon</p>
+            <button className="w-full mt-8 py-4 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-lg rounded-2xl">
               Apply Filters
             </button>
           </motion.div>
@@ -266,20 +238,15 @@ export default function NailsPage() {
       )}
 
       {/* BOTTOM NAV */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl"
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t z-50 shadow-2xl">
         <div className="flex justify-around py-3">
           <Link href="/" className="text-gray-500 text-xs">Home</Link>
           <Link href="/categories" className="text-gray-500 text-xs">Categories</Link>
-          <Link href="/cart" className="text-purple-600 font-black text-sm">Cart</Link>
-          <Link href="/wishlist" className="text-gray-500 text-xs">Wishlist</Link>
+          <Link href="/nails" className="text-purple-600 font-black text-sm">Nails</Link>
+          <Link href="/bookings" className="text-gray-500 text-xs">Bookings</Link>
           <Link href="/account" className="text-gray-500 text-xs">Account</Link>
         </div>
-      </motion.div>
+      </div>
     </>
   );
 }

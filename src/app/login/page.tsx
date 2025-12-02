@@ -29,7 +29,7 @@ export default function UserLogin() {
     }
 
     login({ email, name: email.split("@")[0] });
-    router.push("/");
+    router.push("/home");
   };
 
   const handleResetPassword = (e: React.FormEvent) => {

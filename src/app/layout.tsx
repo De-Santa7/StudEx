@@ -11,9 +11,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  
-  // Hide navbar on admin, login, and signup pages
-  const hideNav = pathname?.startsWith("/admin") || pathname === "/login" || pathname === "/signup";
+
+  const hideNav = pathname === "/" ||  // ← ADD THIS LINE
+                  pathname?.startsWith("/admin") ||
+                  pathname === "/login" ||
+                  pathname === "/signup";
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -22,14 +24,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        {/* Fixed Bottom Navigation - Hidden on admin/login/signup */}
         {!hideNav && (
-          <div className="fixed bottom-0 left-0 w-full z-50">
+          <div className="fixed inset-x-0 bottom-0 z-50">
             <BottomNav />
           </div>
         )}
 
-        <Toaster />
+        <Toaster 
+          position="top-center"
+          richColors
+          closeButton
+        />
       </body>
     </html>
   );

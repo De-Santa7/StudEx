@@ -1,140 +1,250 @@
-// src/app/lashes/[id]/page.tsx
+// src/app/lashes/[id]/page.tsx  ← STUDEx 2.0 PROVIDER PROFILE (e.g. /lashes/bella)
 "use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useRouter, useParams } from "next/navigation";
-import { Star, Heart, ChevronLeft, Plus } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useCartStore } from "@/lib/cartStore";
-import { useWishlistStore } from "@/lib/wishlistStore";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { Star, MapPin, Clock, MessageCircle, Calendar, CheckCircle, Shield, ChevronLeft, Send, X } from "lucide-react";
+import { useState } from "react";
 
-const lashData: Record<string, any> = {
-  "1": { title: "Classic Lashes", price: 5000, img: "classic-lashes.jpg", vendor: "Lash Queen Bella", desc: "Natural enhancement. Lightweight, elegant, and timeless.", duration: "60 mins", rating: 4.9, reviews: 312 },
-  "2": { title: "Volume Lashes", price: 8000, img: "volume-lashes.jpg", vendor: "Flutter Studio", desc: "Full, fluffy, dramatic volume. Perfect for events.", duration: "90 mins", rating: 4.8, reviews: 289 },
-  "3": { title: "Hybrid Lashes", price: 6500, img: "hybrid-lashes.jpg", vendor: "Lash Bae OAU", desc: "Best of both worlds — classic + volume.", duration: "75 mins", rating: 4.7, reviews: 198 },
-  "4": { title: "Lash Lift + Tint", price: 4500, img: "lash-lift.jpg", vendor: "Lash Queen Bella", desc: "Natural lashes lifted and darkened. No extensions.", duration: "45 mins", rating: 4.9, reviews: 267 },
+const providers: Record<string, any> = {
+  bella: {
+    name: "Lash Queen Bella",
+    rating: 4.9,
+    reviews: 312,
+    responseTime: "10 mins",
+    price: "From ₦6,000",
+    location: "Moremi Hall",
+    verified: true,
+    img: "lashes-vendor-1.jpg",
+    bio: "5+ years doing lashes on campus. Specialize in classic & hybrid. Same-day booking available!",
+    skills: ["Classic", "Volume", "Hybrid", "Lash Lift", "Russian Volume", "Mega Volume"],
+    portfolio: ["bella-1.jpg", "bella-2.jpg", "bella-3.jpg", "bella-4.jpg"],
+    duration: "45–90 mins",
+    availability: "Mon–Sat, 9AM–8PM",
+  },
+  flutter: {
+    name: "Flutter Studio",
+    rating: 4.8,
+    reviews: 289,
+    responseTime: "15 mins",
+    price: "From ₦8,000",
+    location: "Angola Hall",
+    verified: true,
+    img: "lashes-vendor-2.jpg",
+    bio: "Your go-to for dramatic volume & event lashes. Book early for weekends!",
+    skills: ["Volume", "Mega Volume", "Wispy", "Cat Eye", "Doll Eye"],
+    portfolio: ["flutter-1.jpg", "flutter-2.jpg", "flutter-3.jpg"],
+    duration: "60–150 mins",
+    availability: "Tue–Sun, 10AM–9PM",
+  },
+  lashbae: {
+    name: "Lash Bae OAU",
+    rating: 4.7,
+    reviews: 198,
+    responseTime: "20 mins",
+    price: "From ₦5,500",
+    location: "Fajuyi Hall",
+    verified: false,
+    img: "lashes-vendor-3.jpg",
+    bio: "Affordable luxury lashes. First-timers get 10% off!",
+    skills: ["Classic", "Hybrid", "Lash Lift + Tint", "Bottom Lashes"],
+    portfolio: ["lashbae-1.jpg", "lashbae-2.jpg", "lashbae-3.jpg"],
+    duration: "40–80 mins",
+    availability: "Mon–Fri, 11AM–7PM",
+  },
 };
 
-export default function LashDetail() {
+export default function ProviderProfile() {
   const router = useRouter();
   const { id } = useParams();
-  const lashId = Array.isArray(id) ? id[0] : id;
-  const lash = lashData[lashId] || lashData["1"];
-  const numericId = parseInt(lashId);
+  const providerId = Array.isArray(id) ? id[0] : id;
+  const provider = providers[providerId] || providers.bella;
 
-  const [localWishlist, setLocalWishlist] = useState<Set<number>>(new Set());
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
 
-  const addToCart = useCartStore((s) => s.addToCart);
-  const addToWishlist = useWishlistStore((s) => s.addToWishlist);
-  const removeFromWishlist = useWishlistStore((s) => s.removeFromWishlist);
-
-  useEffect(() => {
-    const items = useWishlistStore.getState().items ?? [];
-    setLocalWishlist(new Set(items.map(i => i.id)));
-  }, []);
-
-  useEffect(() => {
-    const unsub = useWishlistStore.subscribe((state) => {
-      setLocalWishlist(new Set(state.items?.map(i => i.id) || []));
-    });
-    return unsub;
-  }, []);
-
-  const isInWishlist = useMemo(() => localWishlist.has(numericId), [localWishlist, numericId]);
-
-  const showToast = useCallback((msg: string, isWishlist = false) => {
-    const toast = document.createElement("div");
-    toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-8 py-4 rounded-full shadow-2xl z-50 font-black text-white text-lg backdrop-blur-md ${isWishlist ? "bg-gradient-to-r from-pink-500 to-rose-500" : "bg-gradient-to-r from-purple-600 to-teal-600"}`;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2200);
-  }, []);
-
-  const handleAddToCart = useCallback(() => {
-    addToCart({ id: numericId, title: lash.title, price: lash.price, img: lash.img, category: "Lashes" });
-    showToast("Added to Cart!");
-  }, [addToCart, numericId, lash, showToast]);
-
-  const handleWishlist = useCallback(() => {
-    if (isInWishlist) {
-      removeFromWishlist(numericId);
-      setLocalWishlist(prev => { const n = new Set(prev); n.delete(numericId); return n; });
-      showToast("Removed from Wishlist", true);
-    } else {
-      addToWishlist({ id: numericId, title: lash.title, price: lash.price, img: lash.img });
-      setLocalWishlist(prev => new Set(prev).add(numericId));
-      showToast("Added to Wishlist", true);
-    }
-  }, [isInWishlist, removeFromWishlist, addToWishlist, numericId, lash, showToast]);
+  const sendMessage = () => {
+    if (!message.trim()) return;
+    setMessages(prev => [...prev, message]);
+    setMessage("");
+    // In real app: send to backend + notify provider
+  };
 
   return (
     <>
-      {/* TOP BAR */}
-      <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b border-gray-100">
-        <div className="flex items-center p-4">
-          <button onClick={() => router.back()} className="p-3 hover:bg-purple-100 rounded-full transition">
-            <ChevronLeft className="w-7 h-7 text-purple-600" />
-          </button>
-          <h1 className="ml-3 text-xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-            Lash Detail
-          </h1>
+      <div className="min-h-screen bg-gray-50 pb-32">
+
+        {/* TOP BAR */}
+        <div className="sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b shadow-sm">
+          <div className="flex items-center justify-between p-4">
+            <button onClick={() => router.back()} className="p-3 hover:bg-purple-100 rounded-full transition">
+              <ChevronLeft className="w-8 h-8 text-purple-600" />
+            </button>
+            <h1 className="text-xl font-black text-gray-900">{provider.name}</h1>
+            <div className="w-12" />
+          </div>
         </div>
-      </motion.div>
 
-      <div className="p-6 space-y-8 pb-32">
-        {/* HERO IMAGE */}
-        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="relative h-80 rounded-3xl overflow-hidden shadow-2xl">
-          <Image src={`/images/${lash.img}`} alt={lash.title} fill className="object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleWishlist}
-            className="absolute top-4 right-4 p-4 bg-white/90 backdrop-blur rounded-full shadow-xl">
-            <Heart className={`w-7 h-7 ${isInWishlist ? "fill-pink-500 text-pink-500" : "text-gray-700"}`} />
-          </motion.button>
-        </motion.div>
+        {/* HERO IMAGE + NAME */}
+        <div className="relative h-80">
+          <Image
+            src={`/images/${provider.img}`}
+            alt={provider.name}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          <div className="absolute bottom-6 left-6 text-white">
+            <h1 className="text-4xl font-black">{provider.name}</h1>
+            {provider.verified && (
+              <div className="flex items-center gap-2 mt-2">
+                <CheckCircle className="w-6 h-6 text-blue-400" />
+                <span className="font-bold">Verified Provider</span>
+              </div>
+            )}
+          </div>
+        </div>
 
-        {/* CONTENT */}
-        <div className="space-y-5">
+        <div className="px-6 -mt-10 relative z-10">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 border border-purple-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <Star className="w-8 h-8 text-yellow-500 fill-current" />
+                  <span className="text-3xl font-black">{provider.rating}</span>
+                  <span className="text-gray-600">({provider.reviews} reviews)</span>
+                </div>
+                <p className="text-lg text-gray-600 mt-2 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-teal-600" /> Responds in {provider.responseTime}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-black text-purple-600">{provider.price}</p>
+                <p className="text-sm text-gray-600">Starting price</p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-purple-600" />
+                <span className="font-medium">{provider.location}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-teal-600" />
+                <span className="font-medium">{provider.availability}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BIO & SKILLS */}
+        <div className="px-6 mt-8 space-y-8">
           <div>
-            <h1 className="text-3xl font-black text-gray-900">{lash.title}</h1>
-            <p className="text-lg text-gray-600 mt-1">by <span className="font-bold text-purple-600">{lash.vendor}</span></p>
+            <h2 className="text-2xl font-black mb-4">About</h2>
+            <p className="text-gray-700 text-lg leading-relaxed">{provider.bio}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Star className="w-6 h-6 text-yellow-500 fill-current" />
-            <span className="text-xl font-black">{lash.rating}</span>
-            <span className="text-gray-500">({lash.reviews} reviews)</span>
+
+          <div>
+            <h2 className="text-2xl font-black mb-4">Skills & Styles</h2>
+            <div className="flex flex-wrap gap-3">
+              {provider.skills.map((skill: string) => (
+                <span key={skill} className="px-5 py-3 bg-purple-100 text-purple-700 font-bold rounded-full text-sm">
+                  {skill}
+                </span>
+              ))}
+            </div>
           </div>
-          <p className="text-base text-gray-700 leading-relaxed">{lash.desc}</p>
-          <p className="text-sm text-teal-600 font-bold">Duration: {lash.duration}</p>
-          <div className="text-4xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
-            ₦{lash.price.toLocaleString()}
+
+          {/* PORTFOLIO */}
+          <div>
+            <h2 className="text-2xl font-black mb-4">Portfolio</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {provider.portfolio.map((img: string, i: number) => (
+                <div key={i} className="relative aspect-square rounded-2xl overflow-hidden shadow-lg">
+                  <Image src={`/images/${img}`} alt="Work" fill className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* BOOKING CTA */}
+          <div className="space-y-4">
+            <Link href={`/lashes/${providerId}/book`}>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-2xl rounded-3xl shadow-2xl flex items-center justify-center gap-4"
+              >
+                <Calendar className="w-8 h-8" /> Book Appointment
+              </motion.button>
+            </Link>
+
+            <button className="w-full py-5 border-2 border-purple-600 text-purple-600 font-black text-xl rounded-3xl flex items-center justify-center gap-3 hover:bg-purple-50 transition">
+              <MessageCircle className="w-7 h-7" /> Chat with {provider.name.split(" ")[0]}
+            </button>
+          </div>
+
+          {/* TRUST BADGES */}
+          <div className="bg-gradient-to-r from-purple-50 to-teal-50 rounded-3xl p-6 text-center">
+            <div className="flex items-center justify-center gap-3">
+              <Shield className="w-10 h-10 text-purple-600" />
+              <div>
+                <p className="font-black text-lg">Escrow Protected</p>
+                <p className="text-sm text-gray-600">Money held until job is done</p>
+              </div>
+            </div>
+          </div>
+
+          {/* IN-PAGE CHAT (Optional — can be modal later) */}
+          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border">
+            <div className="bg-gradient-to-r from-purple-600 to-teal-600 text-white p-5">
+              <h3 className="text-xl font-black">Chat with {provider.name.split(" ")[0]}</h3>
+              <p className="text-sm opacity-90">Ask about price, availability, or custom styles</p>
+            </div>
+            <div className="h-64 overflow-y-auto p-5">
+              {messages.length === 0 ? (
+                <p className="text-center text-gray-400 mt-16">Start the conversation...</p>
+              ) : (
+                messages.map((msg, i) => (
+                  <div key={i} className="flex justify-end mb-4">
+                    <div className="bg-gradient-to-r from-purple-600 to-teal-600 text-white rounded-3xl rounded-br-none px-5 py-3 max-w-xs shadow-lg">
+                      {msg}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="p-4 border-t bg-gray-50">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                  placeholder="e.g. Can you do volume for ₦7k tomorrow?"
+                  className="flex-1 bg-white border border-gray-300 rounded-full px-6 py-4 focus:outline-none focus:border-purple-500"
+                />
+                <button onClick={sendMessage} className="w-14 h-14 bg-gradient-to-r from-purple-600 to-teal-600 rounded-full flex items-center justify-center shadow-xl">
+                  <Send className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex gap-4 pt-6">
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleAddToCart}
-            className="flex-1 py-5 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-xl rounded-2xl shadow-2xl flex items-center justify-center gap-3">
-            <Plus className="w-7 h-7" />
-            Book Now
-          </motion.button>
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleWishlist}
-            className="p-5 bg-gradient-to-r from-pink-100 to-rose-100 rounded-2xl shadow-xl">
-            <Heart className={`w-8 h-8 ${isInWishlist ? "fill-pink-500 text-pink-500" : "text-gray-600"}`} />
-          </motion.button>
+        {/* BOTTOM NAV */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t z-50 shadow-2xl">
+          <div className="flex justify-around py-3">
+            <Link href="/" className="text-gray-500 text-xs">Home</Link>
+            <Link href="/lashes" className="text-purple-600 font-black text-sm">Lashes</Link>
+            <Link href="/bookings" className="text-gray-500 text-xs">Bookings</Link>
+            <Link href="/chat" className="text-gray-500 text-xs">Chat</Link>
+            <Link href="/account" className="text-gray-500 text-xs">Account</Link>
+          </div>
         </div>
       </div>
-
-      {/* BOTTOM NAV */}
-      <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t z-50 shadow-2xl">
-        <div className="flex justify-around py-3">
-          <div className="text-gray-500 text-xs">Home</div>
-          <div className="text-purple-600 font-black text-sm">Lashes</div>
-          <div className="text-gray-500 text-xs">Cart</div>
-          <div className="text-gray-500 text-xs">Wishlist</div>
-          <div className="text-gray-500 text-xs">Account</div>
-        </div>
-      </motion.div>
     </>
   );
 }

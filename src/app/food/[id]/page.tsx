@@ -1,121 +1,72 @@
-// src/app/food/[id]/page.tsx
+// src/app/food/[id]/page.tsx  ← FOOD DETAIL PAGE (GOD TIER STUDEx DESIGN)
+
 "use client";
 
-import { ChevronLeft, Heart, ShoppingCart, Star, MapPin, ChevronRight, MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { 
+  Star, Heart, ShoppingCart, ChevronLeft, MapPin, 
+  MessageCircle, CheckCircle, Package, Zap, Shield 
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/lib/cartStore";
 import { useWishlistStore } from "@/lib/wishlistStore";
 
-// MOCK FOOD DATA — With Phone Numbers
-const foodProducts = {
-  1: {
+const foodProducts: Record<string, any> = {
+  "1": {
     id: 1,
-    name: "Jollof Rice",
+    name: "Jollof Rice + Chicken",
     price: 2500,
-    img: "Rice Bowl",
+    img: "jollof.jpg",
     rating: 4.9,
     reviews: 128,
-    description: "Authentic Nigerian jollof rice with chicken, served with plantain and coleslaw.",
-    seller: {
-      name: "Mama's Kitchen",
-      avatar: "M",
-      campus: "LASU Main Campus",
-      rating: 4.8,
-      totalSales: 892,
+    description: "Authentic Nigerian jollof rice with perfectly grilled chicken, plantain, and coleslaw. Campus favorite!",
+    vendor: {
+      name: "Mama Put",
+      avatar: "vendor-mama.jpg",
+      location: "Gate 2",
+      rating: 4.9,
+      sales: 2100,
       verified: true,
-      phone: "+2348012345678",
+      open: true,
     },
   },
-  2: {
+  "2": {
     id: 2,
-    name: "Suya (Beef)",
+    name: "Beef Suya (10 Sticks)",
     price: 3000,
-    img: "Skewers",
+    img: "suya.jpg",
     rating: 4.8,
     reviews: 95,
-    description: "Spicy grilled beef suya with onions and special spice mix.",
-    seller: {
+    description: "Spicy grilled beef suya with onions, tomatoes, and signature spice mix. Perfect for late nights.",
+    vendor: {
       name: "Suya King",
-      avatar: "S",
-      campus: "LASU Gate",
+      avatar: "vendor-suya.jpg",
+      location: "Hostel A",
       rating: 4.9,
-      totalSales: 1203,
+      sales: 1800,
       verified: true,
-      phone: "+2348123456789",
+      open: true,
     },
   },
-  3: {
+  "3": {
     id: 3,
-    name: "Coca-Cola",
-    price: 500,
-    img: "Bottle",
+    name: "Indomie Supreme",
+    price: 600,
+    img: "indomie.jpg",
     rating: 4.7,
-    reviews: 210,
-    description: "Chilled 50cl bottle of Coca-Cola.",
-    seller: {
-      name: "Campus Mart",
-      avatar: "C",
-      campus: "LASU Hostels",
-      rating: 4.6,
-      totalSales: 3200,
-      verified: true,
-      phone: "+2348034567890",
-    },
-  },
-  4: {
-    id: 4,
-    name: "Pizza Slice",
-    price: 1500,
-    img: "Pizza",
-    rating: 4.6,
-    reviews: 67,
-    description: "Freshly baked pepperoni pizza slice.",
-    seller: {
-      name: "Pizza Hub",
-      avatar: "P",
-      campus: "Faculty of Science",
+    reviews: 3200,
+    description: "Double egg, sausage, plantain, and extra spice. The ultimate student fuel.",
+    vendor: {
+      name: "Indomie Spot",
+      avatar: "vendor-indomie.jpg",
+      location: "Angola Hall",
       rating: 4.7,
-      totalSales: 450,
+      sales: 5000,
       verified: true,
-      phone: "+2348076543210",
-    },
-  },
-  5: {
-    id: 5,
-    name: "Plantain Chips",
-    price: 800,
-    img: "Chips",
-    rating: 4.5,
-    reviews: 89,
-    description: "Crispy fried plantain chips with pepper.",
-    seller: {
-      name: "Snack Queen",
-      avatar: "S",
-      campus: "Student Union",
-      rating: 4.5,
-      totalSales: 680,
-      verified: false,
-      phone: "+2348098765432",
-    },
-  },
-  6: {
-    id: 6,
-    name: "Zobo Drink",
-    price: 700,
-    img: "Glass",
-    rating: 4.8,
-    reviews: 102,
-    description: "Fresh hibiscus tea with pineapple and ginger.",
-    seller: {
-      name: "Healthy Vibes",
-      avatar: "H",
-      campus: "Medical Center",
-      rating: 4.9,
-      totalSales: 510,
-      verified: true,
-      phone: "+2348055512345",
+      open: true,
     },
   },
 };
@@ -123,173 +74,200 @@ const foodProducts = {
 export default function FoodDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const product = foodProducts[id as string];
+  const product = foodProducts[id as string] || foodProducts["1"];
 
-  const addItem = useCartStore((state) => state.addToCart);
-  const wishlistItems = useWishlistStore((state) => state.items);
-  const addToWishlist = useWishlistStore((state) => state.addToWishlist);
-  const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
-
+  const addToCart = useCartStore((state) => state.addToCart);
+  const { items: wishlist, addToWishlist, removeFromWishlist } = useWishlistStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
-    if (product && wishlistItems.find((i) => i.id === product.id)) {
-      setIsWishlisted(true);
-    }
-  }, [product, wishlistItems]);
-
-  // WHATSAPP CHAT FUNCTION
-  const openWhatsApp = () => {
-    if (!product?.seller.phone) {
-      alert("Seller phone number not available");
-      return;
-    }
-
-    const message = `Hi ${product.seller.name}, I'm interested in your *${product.name}*!\n\nPrice: ₦${product.price.toLocaleString()}\n\nIs it still available?`;
-    const encoded = encodeURIComponent(message);
-    const cleanPhone = product.seller.phone.replace(/\D/g, "");
-    const url = `https://wa.me/${cleanPhone}?text=${encoded}`;
-    
-    window.open(url, "_blank");
-  };
-
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <p className="text-xl" style={{ color: "#7C3AED" }}>Product not found</p>
-      </div>
-    );
-  }
+    setIsWishlisted(wishlist.some(item => item.id === product.id));
+  }, [wishlist, product.id]);
 
   const handleAddToCart = () => {
-    addItem({
+    addToCart({
       id: product.id,
-      name: product.name,
+      title: product.name,
       price: product.price,
       img: product.img,
+      category: "Food"
     });
-    alert(`${product.name} added to cart!`);
+    showToast("Added to Cart!");
   };
 
   const toggleWishlist = () => {
     if (isWishlisted) {
       removeFromWishlist(product.id);
+      showToast("Removed from Wishlist", true);
     } else {
       addToWishlist({
         id: product.id,
-        name: product.name,
+        title: product.name,
         price: product.price,
-        img: product.img,
+        img: product.img
       });
+      showToast("Added to Wishlist", true);
     }
     setIsWishlisted(!isWishlisted);
   };
 
+  const showToast = (msg: string, isWishlist = false) => {
+    const toast = document.createElement("div");
+    toast.className = `fixed top-20 left-1/2 -translate-x-1/2 px-8 py-4 rounded-full shadow-2xl z-50 font-black text-white text-lg backdrop-blur-md ${isWishlist ? "bg-gradient-to-r from-pink-500 to-rose-500" : "bg-gradient-to-r from-purple-600 to-teal-600"}`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+  };
+
+  const openWhatsApp = () => {
+    const message = `Hi! I'm interested in your *${product.name}* (₦${product.price.toLocaleString()}). Is it still available?`;
+    const url = `https://wa.me/2348123456789?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
   return (
     <>
-      {/* Top Bar */}
-      <div className="sticky top-0 bg-white z-40 border-b">
+      {/* TOP BAR */}
+      <div className="sticky top-0 bg-white/95 backdrop-blur-2xl z-50 border-b">
         <div className="flex items-center justify-between p-4">
-          <button onClick={() => router.back()}>
-            <ChevronLeft className="w-6 h-6" style={{ color: "#7C3AED" }} />
+          <button onClick={() => router.back()} className="p-3 hover:bg-purple-100 rounded-full transition active:scale-95">
+            <ChevronLeft className="w-8 h-8 text-purple-700" />
           </button>
-          <h1 className="text-lg font-bold" style={{ color: "#7C3AED" }}>Product Details</h1>
-          <div />
+          <h1 className="text-xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+            Food Details
+          </h1>
+          <div className="w-12" />
         </div>
       </div>
 
-      <div className="p-4 pb-32 space-y-6 overflow-x-hidden">
-        {/* Product Image */}
-        <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl h-64 flex items-center justify-center text-9xl">
-          {product.img}
-        </div>
+      <div className="pb-32">
 
-        {/* Product Info + BUY NOW UNDER PRICE */}
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: "#7C3AED" }}>{product.name}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-yellow-500 text-yellow-500" : "text-gray-300"}`}
-                />
-              ))}
+        {/* HERO IMAGE */}
+        <div className="relative h-80">
+          <Image 
+            src={`/images/${product.img}`} 
+            alt={product.name} 
+            fill 
+            className="object-cover" 
+            priority 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+          {/* Floating Heart */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={toggleWishlist}
+            className="absolute top-6 right-6 p-4 bg-white/90 backdrop-blur rounded-full shadow-2xl"
+          >
+            <Heart className={`w-7 h-7 transition-all ${isWishlisted ? "fill-pink-500 text-pink-500" : "text-gray-700"}`} />
+          </motion.button>
+
+          {/* Bestseller Badge */}
+          {product.reviews > 1000 && (
+            <div className="absolute top-6 left-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black px-5 py-2 rounded-full shadow-2xl text-sm">
+              CAMPUS FAVORITE
             </div>
-            <span className="text-sm text-gray-600">({product.reviews} reviews)</span>
-          </div>
-          <p className="text-3xl font-bold mt-2" style={{ color: "#14B8A6" }}>
-            ₦{product.price.toLocaleString()}
-          </p>
-
-          {/* BUY NOW BUTTON — UNDER PRICE */}
-          <div className="mt-3">
-            <Link href={`/checkout?product=${product.id}&type=food`}>
-              <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition-all">
-                Buy Now
-              </button>
-            </Link>
-          </div>
+          )}
         </div>
 
-        {/* Description */}
-        <div className="bg-surface rounded-xl p-4">
-          <p className="text-gray-700">{product.description}</p>
-        </div>
+        <div className="px-6 -mt-12 relative z-10 space-y-8">
 
-        {/* Seller Card */}
-        <div className="bg-surface rounded-xl p-4 flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            {product.seller.avatar}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <p className="font-bold" style={{ color: "#7C3AED" }}>{product.seller.name}</p>
-              {product.seller.verified && (
-                <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">Verified</span>
+          {/* PRODUCT CARD */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-white rounded-3xl shadow-2xl p-6 border-2 border-purple-100"
+          >
+            <h1 className="text-3xl font-black text-gray-900">{product.name}</h1>
+            
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex items-center gap-2">
+                <Star className="w-7 h-7 text-yellow-500 fill-current" />
+                <span className="text-2xl font-black">{product.rating}</span>
+                <span className="text-gray-600">({product.reviews} reviews)</span>
+              </div>
+            </div>
+
+            <p className="text-lg text-gray-700 mt-4 leading-relaxed">{product.description}</p>
+
+            <div className="mt-6 text-5xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent">
+              ₦{product.price.toLocaleString()}
+            </div>
+          </motion.div>
+
+          {/* VENDOR CARD */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-3xl shadow-2xl p-6 border-2 border-purple-100 flex items-center gap-5"
+          >
+            <div className="relative w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-purple-100">
+              <Image src={`/images/${product.vendor.avatar}`} alt={product.vendor.name} fill className="object-cover" />
+              {product.vendor.open && (
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-purple-600 to-teal-600 text-white text-xs font-black px-3 py-1 rounded-full animate-pulse">
+                  OPEN
+                </div>
               )}
             </div>
-            <p className="text-sm text-gray-600 flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {product.seller.campus}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">{product.seller.totalSales} sales</p>
+
+            <div className="flex-1">
+              <h3 className="text-xl font-black flex items-center gap-2">
+                {product.vendor.name}
+                {product.vendor.verified && <CheckCircle className="w-6 h-6 text-blue-600" />}
+              </h3>
+              <p className="text-gray-600 flex items-center gap-1 mt-1">
+                <MapPin className="w-5 h-5" /> {product.vendor.location}
+              </p>
+              <div className="flex items-center gap-4 mt-3 text-sm">
+                <span className="font-bold">{product.vendor.rating} stars</span>
+                <span className="text-gray-600">{product.vendor.sales}+ orders</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* WHATSAPP & ACTIONS */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-4"
+          >
+            <button
+              onClick={openWhatsApp}
+              className="w-full py-5 bg-green-500 hover:bg-green-600 text-white font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 transition-all"
+            >
+              <MessageCircle className="w-8 h-8" />
+              Chat on WhatsApp
+            </button>
+
+            <button
+              onClick={handleAddToCart}
+              className="w-full py-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-2xl rounded-3xl shadow-2xl flex items-center justify-center gap-4 hover:shadow-3xl transition-all"
+            >
+              <ShoppingCart className="w-9 h-9" />
+              Add to Cart • ₦{product.price.toLocaleString()}
+            </button>
+          </motion.div>
+
+          {/* ESCROW PROTECTION */}
+          <div className="bg-gradient-to-r from-purple-50 to-teal-50 rounded-3xl p-6 text-center border-2 border-purple-200">
+            <Shield className="w-14 h-14 text-purple-600 mx-auto mb-3" />
+            <p className="font-black text-xl">100% Escrow Protected</p>
+            <p className="text-gray-700 mt-1">Pay only when food arrives hot & fresh</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" />
         </div>
+      </div>
 
-        {/* WHATSAPP BUTTON */}
-        <div className="mx-4">
-          <button
-            onClick={openWhatsApp}
-            className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all"
-          >
-            <MessageCircle className="w-5 h-5" />
-            Chat with Seller on WhatsApp
-          </button>
-        </div>
-
-        {/* Action Buttons — FIXED BOTTOM */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 space-y-3">
-          <button
-            onClick={handleAddToCart}
-            className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2 shadow-lg"
-            style={{ backgroundColor: "#14B8A6" }}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            Add to Cart
-          </button>
-
-          <button
-            onClick={toggleWishlist}
-            className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-              isWishlisted
-                ? "bg-red-500 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-          >
-            <Heart className={`w-5 h-5 ${isWishlisted ? "fill-white" : ""}`} />
-            {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
-          </button>
+      {/* BOTTOM NAV */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t z-50 shadow-2xl">
+        <div className="flex justify-around py-3">
+          <Link href="/" className="text-gray-500 text-xs">Home</Link>
+          <Link href="/categories" className="text-gray-500 text-xs">Services</Link>
+          <Link href="/food" className="text-purple-600 font-black text-sm">Food</Link>
+          <Link href="/cart" className="text-gray-500 text-xs">Cart</Link>
+          <Link href="/account" className="text-gray-500 text-xs">Account</Link>
         </div>
       </div>
     </>
