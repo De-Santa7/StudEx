@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home, Grid3x3, ShoppingCart, Heart, User } from "lucide-react";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { href: "/home", icon: Home, label: "Home" },
@@ -16,6 +17,8 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // BLOCK NAV from showing on these pages
   if (
@@ -27,8 +30,33 @@ export default function BottomNav() {
     return null;
   }
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY < 50) {
+        // Always show when near top
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling down - hide
+        setIsVisible(false);
+      } else {
+        // Scrolling up - show
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <div
+    <motion.div
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : 100 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       style={{ 
         position: 'fixed',
         bottom: 0,
@@ -110,6 +138,6 @@ export default function BottomNav() {
           className="w-12 h-12 rounded-full object-cover"
         />
       </Link>
-    </div>
+    </motion.div>
   );
 }

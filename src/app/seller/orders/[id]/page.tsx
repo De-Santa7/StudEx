@@ -1,19 +1,12 @@
-// src/app/account/orders/[id]/page.tsx
 "use client";
 
-import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { Package, CheckCircle, Clock, MapPin, AlertCircle, ChevronLeft, Calendar, User } from "lucide-react";
 import { useState, useEffect } from "react";
-
-interface OrderItem {
-  title: string;
-  qty: number;
-  price: number;
-  img?: string;
-}
+import { motion } from "framer-motion";
+import {
+  Package, CheckCircle, ChevronLeft, AlertCircle, Calendar, MapPin, User, DollarSign, Clock, Phone, MessageCircle
+} from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 
 interface Order {
   id: string;
@@ -32,77 +25,64 @@ interface Order {
     time: string;
     location: string;
   };
-  foodDetails?: OrderItem[];
+  foodDetails?: any[];
 }
 
-export default function OrderDetailPage() {
+function SellerOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const orderId = params.id as string;
-  
+
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [confirming, setConfirming] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
 
   useEffect(() => {
-    // Load order from localStorage
     const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
     const foundOrder = allOrders.find((o: Order) => o.id === orderId);
-    
+
     if (foundOrder) {
       setOrder(foundOrder);
     }
     setLoading(false);
   }, [orderId]);
 
-  const handleConfirmReceipt = async () => {
+  const handleMarkAsComplete = async () => {
     if (!order) return;
 
-    setConfirming(true);
+    setCompleting(true);
 
-    // Simulate verification delay
+    // Simulate processing
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Update order status to completed
+    // Update order status to completed in escrow (seller marked it done)
     const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
-    const updatedOrders = allOrders.map((o: Order) => 
+    const updatedOrders = allOrders.map((o: Order) =>
       o.id === orderId ? { ...o, status: "completed" } : o
     );
     localStorage.setItem("allOrders", JSON.stringify(updatedOrders));
 
-    // Release funds from escrow to seller's wallet
-    const currentEscrow = parseFloat(localStorage.getItem("walletInEscrow") || "0");
-    const newEscrow = currentEscrow - order.amount;
-    localStorage.setItem("walletInEscrow", newEscrow.toString());
-
-    // Add to seller's wallet
-    const sellerWallet = parseFloat(localStorage.getItem("walletBalance") || "0");
-    const newSellerWallet = sellerWallet + order.amount;
-    localStorage.setItem("walletBalance", newSellerWallet.toString());
-
-    // Update seller's transaction (from in_escrow to released)
+    // Update transaction status to show seller completed it
     const transactions = JSON.parse(localStorage.getItem("sellerTransactions") || "[]");
     const updatedTransactions = transactions.map((t: any) =>
-      t.orderId === orderId ? { ...t, status: "released" } : t
+      t.orderId === orderId ? { ...t, status: "shipped" } : t
     );
     localStorage.setItem("sellerTransactions", JSON.stringify(updatedTransactions));
 
-    // Update local order state
     setOrder(prev => prev ? { ...prev, status: "completed" } : null);
-    setConfirming(false);
-    setShowConfirmModal(false);
+    setCompleting(false);
+    setShowCompleteModal(false);
 
-    // Show success and redirect
     setTimeout(() => {
-      router.push("/account/orders");
+      router.push("/seller/orders");
     }, 1500);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity }}>
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
           <Clock className="w-12 h-12 text-purple-600" />
         </motion.div>
       </div>
@@ -115,10 +95,9 @@ export default function OrderDetailPage() {
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center bg-white rounded-3xl p-8 shadow-xl">
           <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
           <h2 className="text-2xl font-black text-gray-800 mb-2">Order Not Found</h2>
-          <p className="text-gray-600 mb-6">We couldn't find this order</p>
-          <Link href="/account/orders">
+          <Link href="/seller/orders">
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-bold rounded-xl">
+              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-bold rounded-xl mt-4">
               Back to Orders
             </motion.button>
           </Link>
@@ -140,7 +119,7 @@ export default function OrderDetailPage() {
         className="sticky top-0 bg-white/90 backdrop-blur-xl z-40 border-b border-purple-100 shadow-sm"
       >
         <div className="flex items-center justify-between p-4 max-w-4xl mx-auto">
-          <Link href="/account/orders">
+          <Link href="/seller/orders">
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -175,7 +154,7 @@ export default function OrderDetailPage() {
               {isPending ? (
                 <>
                   <Clock className="w-5 h-5" />
-                  Pending Confirmation
+                  Pending
                 </>
               ) : (
                 <>
@@ -187,25 +166,27 @@ export default function OrderDetailPage() {
           </div>
         </motion.div>
 
-        {/* ESCROW STATUS CARD */}
+        {/* WHAT TO DO */}
         {isPending && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-6"
+            className="bg-blue-50 border-2 border-blue-300 rounded-3xl p-6"
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center flex-shrink-0">
-                <Clock className="w-6 h-6 text-amber-700" />
+              <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0">
+                <Clock className="w-6 h-6 text-blue-700" />
               </div>
               <div>
-                <p className="font-black text-amber-900 text-lg">Payment Held in Escrow</p>
-                <p className="text-sm text-amber-800 mt-2">
-                  ₦{order.amount.toLocaleString()} is safely held by StudEx. Once you confirm receipt, it will be released to the seller.
+                <p className="font-black text-blue-900 text-lg">Mark Order as Complete</p>
+                <p className="text-sm text-blue-800 mt-2">
+                  {isService 
+                    ? "Once you've completed the service, tap the button below to confirm."
+                    : "Once the food is ready for pickup/delivery, confirm it here."}
                 </p>
-                <p className="text-xs text-amber-700 mt-2">
-                  You have 7 days to confirm or dispute this order.
+                <p className="text-xs text-blue-700 mt-2">
+                  Payment (₦{order.amount.toLocaleString()}) is held in escrow until the buyer confirms receipt.
                 </p>
               </div>
             </div>
@@ -224,16 +205,16 @@ export default function OrderDetailPage() {
                 <CheckCircle className="w-6 h-6 text-green-700" />
               </div>
               <div>
-                <p className="font-black text-green-900 text-lg">Confirmed & Completed</p>
+                <p className="font-black text-green-900 text-lg">You've Completed This Order</p>
                 <p className="text-sm text-green-800 mt-2">
-                  You confirmed receipt of this order. ₦{order.amount.toLocaleString()} has been released to {order.sellerName}.
+                  Waiting for buyer to confirm receipt. Once they do, ₦{order.amount.toLocaleString()} will be added to your wallet.
                 </p>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ORDER DETAILS */}
+        {/* BUYER INFO */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -241,126 +222,106 @@ export default function OrderDetailPage() {
           className="bg-white rounded-3xl p-6 shadow-xl"
         >
           <h3 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-2">
-            <Package className="w-7 h-7 text-purple-600" />
-            {isService ? "Service Details" : "Order Details"}
+            <User className="w-7 h-7 text-purple-600" />
+            Customer Details
           </h3>
 
-          {/* SERVICE DETAILS */}
-          {isService && order.serviceDetails && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl">
-                <span className="font-semibold text-gray-700">Service</span>
-                <span className="font-bold text-gray-900">{order.serviceDetails.serviceName}</span>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-2xl">
+              <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
+                <User className="w-6 h-6 text-purple-600" />
               </div>
-              <div className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl">
-                <span className="font-semibold text-gray-700 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" /> Date
-                </span>
-                <span className="font-bold text-gray-900">{order.serviceDetails.date}</span>
-              </div>
-              <div className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl">
-                <span className="font-semibold text-gray-700 flex items-center gap-2">
-                  <Clock className="w-4 h-4" /> Time
-                </span>
-                <span className="font-bold text-gray-900">{order.serviceDetails.time}</span>
-              </div>
-              <div className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl">
-                <span className="font-semibold text-gray-700 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> Location
-                </span>
-                <span className="font-bold text-gray-900">{order.serviceDetails.location}</span>
+              <div>
+                <p className="font-bold text-gray-900">{order.buyerName}</p>
+                <p className="text-sm text-gray-600">Customer Name</p>
               </div>
             </div>
-          )}
 
-          {/* FOOD DETAILS */}
-          {!isService && order.foodDetails && (
-            <div className="space-y-3">
-              {order.foodDetails.map((item, i) => (
-                <div key={i} className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl">
-                  <div>
-                    <p className="font-bold text-gray-900">{item.title}</p>
-                    <p className="text-sm text-gray-600">×{item.qty}</p>
+            {isService && order.serviceDetails && (
+              <>
+                <div className="border-t-2 border-gray-200 pt-4 mt-4">
+                  <p className="font-bold text-gray-900 mb-3">Service Details:</p>
+                  <div className="space-y-2 text-sm text-gray-700">
+                    <p><span className="font-semibold">Service:</span> {order.serviceDetails.serviceName}</p>
+                    <p className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span><span className="font-semibold">Date:</span> {order.serviceDetails.date}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      <span><span className="font-semibold">Time:</span> {order.serviceDetails.time}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span><span className="font-semibold">Location:</span> {order.serviceDetails.location}</span>
+                    </p>
                   </div>
-                  <p className="font-bold text-purple-600">₦{(item.price * item.qty).toLocaleString()}</p>
                 </div>
-              ))}
-            </div>
-          )}
+              </>
+            )}
 
-          {/* AMOUNT */}
-          <div className="border-t-2 border-purple-200 mt-6 pt-6">
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-bold text-gray-900">Total Amount</span>
-              <span className="text-3xl font-black text-purple-600">₦{order.amount.toLocaleString()}</span>
-            </div>
+            {!isService && order.foodDetails && (
+              <>
+                <div className="border-t-2 border-gray-200 pt-4 mt-4">
+                  <p className="font-bold text-gray-900 mb-3">Order Items:</p>
+                  <div className="space-y-2">
+                    {order.foodDetails.map((item, i) => (
+                      <div key={i} className="text-sm text-gray-700 p-2 bg-gray-50 rounded">
+                        {item.title} ×{item.qty} - ₦{(item.price * item.qty).toLocaleString()}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
 
-        {/* SELLER INFO */}
+        {/* AMOUNT */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-3xl p-6 shadow-xl"
+          className="bg-gradient-to-r from-purple-100 to-teal-100 rounded-3xl p-6 border-2 border-purple-200"
         >
-          <h4 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-2">
-            <User className="w-6 h-6 text-teal-600" />
-            {isService ? "Service Provider" : "Restaurant/Vendor"}
-          </h4>
-          <p className="text-2xl font-black text-gray-900">{order.sellerName}</p>
+          <p className="text-sm text-gray-700 font-semibold mb-2">Order Amount</p>
+          <p className="text-4xl font-black text-purple-600">₦{order.amount.toLocaleString()}</p>
+          <p className="text-xs text-gray-600 mt-3">
+            This amount is in escrow. It will be released to your wallet once the buyer confirms receipt.
+          </p>
         </motion.div>
 
-        {/* CONFIRM RECEIPT BUTTON */}
+        {/* MARK AS COMPLETE BUTTON */}
         {isPending && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="space-y-4"
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowCompleteModal(true)}
+            className="w-full py-5 bg-gradient-to-r from-purple-600 to-teal-500 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
           >
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowConfirmModal(true)}
-              className="w-full py-5 bg-gradient-to-r from-purple-600 to-teal-500 text-white rounded-2xl font-black text-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
-            >
-              <CheckCircle className="w-6 h-6" />
-              Confirm Receipt
-            </motion.button>
-            
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-4 bg-red-100 text-red-700 rounded-2xl font-bold"
-            >
-              Report an Issue
-            </motion.button>
-          </motion.div>
+            <CheckCircle className="w-6 h-6" />
+            Mark as Complete
+          </motion.button>
         )}
 
         {isCompleted && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-center py-6"
-          >
-            <p className="text-gray-600">
-              This order is complete. You can view your other orders or continue shopping.
+          <div className="text-center py-6 bg-green-50 rounded-2xl">
+            <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+            <p className="text-gray-700 font-semibold">
+              Waiting for buyer to confirm receipt...
             </p>
-          </motion.div>
+          </div>
         )}
       </div>
 
-      {/* CONFIRM RECEIPT MODAL */}
-      {showConfirmModal && (
+      {/* COMPLETE ORDER MODAL */}
+      {showCompleteModal && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={() => !confirming && setShowConfirmModal(false)}
+          onClick={() => !completing && setShowCompleteModal(false)}
         >
           <motion.div
             initial={{ scale: 0.9, y: 20 }}
@@ -369,20 +330,20 @@ export default function OrderDetailPage() {
             className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-2xl font-black text-gray-900 mb-4">Confirm Receipt?</h3>
+            <h3 className="text-2xl font-black text-gray-900 mb-4">Mark as Complete?</h3>
             <p className="text-gray-700 mb-6">
               {isService 
-                ? "Did you receive the service as expected?"
-                : "Did you receive your order in good condition?"}
+                ? "Are you ready to mark this service as complete?"
+                : "Is the food ready for pickup/delivery?"}
             </p>
 
             <div className="bg-purple-50 rounded-xl p-4 mb-6">
               <p className="text-sm text-gray-700">
-                <span className="font-bold">Amount to Release:</span>
+                <span className="font-bold">Order Amount:</span>
               </p>
               <p className="text-3xl font-black text-purple-600 mt-2">₦{order.amount.toLocaleString()}</p>
               <p className="text-xs text-gray-600 mt-2">
-                This will be released to {order.sellerName}
+                In escrow until buyer confirms
               </p>
             </div>
 
@@ -390,8 +351,8 @@ export default function OrderDetailPage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => !confirming && setShowConfirmModal(false)}
-                disabled={confirming}
+                onClick={() => !completing && setShowCompleteModal(false)}
+                disabled={completing}
                 className="flex-1 py-3 bg-gray-200 text-gray-800 rounded-xl font-bold disabled:opacity-50"
               >
                 Cancel
@@ -399,21 +360,21 @@ export default function OrderDetailPage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={handleConfirmReceipt}
-                disabled={confirming}
+                onClick={handleMarkAsComplete}
+                disabled={completing}
                 className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-teal-500 text-white rounded-xl font-black disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {confirming ? (
+                {completing ? (
                   <>
-                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}>
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
                       <Clock className="w-5 h-5" />
                     </motion.div>
-                    Confirming...
+                    Processing...
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-5 h-5" />
-                    Yes, Confirm
+                    Yes, Complete
                   </>
                 )}
               </motion.button>
@@ -439,14 +400,13 @@ export default function OrderDetailPage() {
           <Link href="/cart" className="text-gray-500 hover:text-purple-600 transition">
             <span className="text-xs font-semibold">Cart</span>
           </Link>
-          <Link href="/wishlist" className="text-gray-500 hover:text-purple-600 transition">
-            <span className="text-xs font-semibold">Wishlist</span>
-          </Link>
-          <Link href="/account" className="text-purple-600 font-bold transition">
-            <span className="text-xs">Account</span>
+          <Link href="/seller" className="text-purple-600 font-bold transition">
+            <span className="text-xs">Seller</span>
           </Link>
         </div>
       </motion.div>
     </>
   );
 }
+
+export default SellerOrderDetailPage;

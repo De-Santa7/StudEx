@@ -1,7 +1,7 @@
 // src/app/account/page.tsx
 "use client";
 
-import { User, Package, Heart, Settings, HelpCircle, LogOut, ChevronRight, Store, Clock, ArrowRight } from "lucide-react";
+import { User, Package, Heart, Settings, HelpCircle, LogOut, ChevronRight, Store, Clock, ArrowRight, Wallet, Plus, Eye, EyeOff, History, Send } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/authStore";
 import { useRouter } from "next/navigation";
@@ -13,12 +13,18 @@ export default function AccountPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [sellerStatus, setSellerStatus] = useState<"none" | "pending" | "approved">("none");
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [showBalance, setShowBalance] = useState(true);
 
   useEffect(() => {
     const pending = localStorage.getItem("isSellerPending") === "true";
     const approved = localStorage.getItem("isSeller") === "true";
     if (approved) setSellerStatus("approved");
     else if (pending) setSellerStatus("pending");
+
+    // Load wallet balance from localStorage
+    const balance = localStorage.getItem("walletBalance");
+    setWalletBalance(balance ? parseFloat(balance) : 0);
   }, []);
 
   const handleLogout = () => {
@@ -31,85 +37,150 @@ export default function AccountPage() {
 
   return (
     <>
-      {/* TOP BAR — BIG LOGO */}
+      {/* TOP BAR */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 bg-white/80 backdrop-blur-xl z-40 border-b border-white/20 shadow-sm"
+        className="sticky top-0 bg-white/90 backdrop-blur-xl z-40 border-b border-purple-100 shadow-sm"
       >
-        <div className="flex items-center justify-between p-4">
-          <Link href="/" className="flex items-center">
+        <div className="flex items-center justify-between p-4 max-w-4xl mx-auto">
+          <Link href="/home" className="flex items-center">
             <Image
               src="/images/logo-1.jpg"
               alt="StudEx Logo"
-              width={160}
-              height={50}
-              className="h-11 w-auto object-contain"
+              width={140}
+              height={40}
+              className="h-10 w-auto object-contain"
               priority
             />
           </Link>
           <h1 className="text-xl font-black bg-gradient-to-r from-purple-600 to-teal-500 bg-clip-text text-transparent">
             My Account
           </h1>
+          <div className="w-10" />
         </div>
       </motion.div>
 
-      <div className="p-4 pb-32 space-y-6">
-        {/* PROFILE CARD — GLASS + GRADIENT */}
+      <div className="p-4 pb-24 space-y-5 max-w-3xl mx-auto">
+        {/* PROFILE CARD */}
         <motion.div
           {...fadeInUp}
-          className="bg-gradient-to-br from-purple-500/10 via-teal-500/10 to-white backdrop-blur-lg rounded-2xl p-5 shadow-xl border border-white/30"
+          className="bg-gradient-to-br from-purple-500/10 via-teal-500/10 to-white backdrop-blur-lg rounded-2xl p-5 shadow-lg border border-white/30"
         >
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-lg">
-                {user?.email[0].toUpperCase() || "U"}
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-teal-500 rounded-full flex items-center justify-center text-white text-xl font-black shadow-lg">
+                {user?.email?.[0]?.toUpperCase() || "U"}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div className="flex-1">
               <p className="text-lg font-black bg-gradient-to-r from-purple-600 to-teal-500 bg-clip-text text-transparent">
                 {user?.name || "Campus Hustler"}
               </p>
-              <p className="text-sm font-medium text-teal-600">{user?.email || "user@lasu.edu.ng"}</p>
+              <p className="text-sm font-medium text-teal-600">{user?.email || "user@pau.edu.ng"}</p>
             </div>
           </div>
         </motion.div>
 
-        {/* SELLER STATUS — PENDING */}
+        {/* WALLET CARD - PRIMARY LOCATION */}
+        <motion.div
+          {...fadeInUp}
+          className="bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 rounded-2xl p-6 text-white shadow-2xl relative overflow-hidden"
+        >
+          {/* Decorative circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-6 h-6" />
+                <span className="font-bold text-sm opacity-90">Wallet Balance</span>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowBalance(!showBalance)}
+                className="p-2 hover:bg-white/20 rounded-full transition"
+              >
+                {showBalance ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </motion.button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-4xl font-black">
+                {showBalance ? `₦${walletBalance.toLocaleString()}` : "₦••••••"}
+              </p>
+              <p className="text-sm opacity-80 mt-1">Available balance</p>
+            </div>
+
+            <div className="flex gap-3">
+              <Link href="/wallet/fund" className="flex-1">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full bg-white text-purple-600 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Fund Wallet
+                </motion.button>
+              </Link>
+              <Link href="/wallet/withdraw">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white/20 backdrop-blur-md text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:bg-white/30 transition"
+                >
+                  <Send className="w-5 h-5" />
+                </motion.button>
+              </Link>
+              <Link href="/wallet/history">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white/20 backdrop-blur-md text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:bg-white/30 transition"
+                >
+                  <History className="w-5 h-5" />
+                </motion.button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* SELLER STATUS - PENDING */}
         {sellerStatus === "pending" && (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-5 flex items-center gap-3 shadow-md"
+            className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-3"
           >
             <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-              <Clock className="w-6 h-6 text-amber-600" />
+              <Clock className="w-5 h-5 text-amber-600" />
             </motion.div>
             <div className="flex-1">
-              <p className="font-bold text-amber-800">Application Under Review</p>
+              <p className="font-bold text-amber-800 text-sm">Application Under Review</p>
               <p className="text-xs text-amber-700">We'll notify you in 24–48 hours.</p>
             </div>
           </motion.div>
         )}
 
-        {/* SELLER STATUS — APPROVED */}
+        {/* SELLER STATUS - APPROVED */}
         {sellerStatus === "approved" && (
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5 flex items-center gap-3 shadow-md"
+            className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-4 flex items-center gap-3"
           >
-            <Store className="w-6 h-6 text-teal-600" />
+            <Store className="w-5 h-5 text-teal-600" />
             <div className="flex-1">
-              <p className="font-bold text-teal-800">Verified Seller</p>
+              <p className="font-bold text-teal-800 text-sm">Verified Seller</p>
               <p className="text-xs text-teal-700">Start listing products now!</p>
             </div>
-            <Link href="/seller" className="ml-auto">
+            <Link href="/seller">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-teal-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
+                className="bg-teal-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg"
               >
                 Dashboard
               </motion.button>
@@ -117,7 +188,7 @@ export default function AccountPage() {
           </motion.div>
         )}
 
-        {/* MENU ITEMS — PREMIUM */}
+        {/* MENU ITEMS */}
         <motion.div {...fadeInUp} className="space-y-3">
           {[
             { href: "/account/orders", icon: Package, label: "My Orders", color: "from-purple-500 to-purple-600" },
@@ -134,13 +205,13 @@ export default function AccountPage() {
               <Link href={item.href}>
                 <motion.div
                   {...cardHover}
-                  className="bg-white/70 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between shadow-sm border border-white/30 hover:shadow-lg transition-all"
+                  className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${item.color} flex items-center justify-center shadow-md`}>
                       <item.icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-semibold text-gray-800">{item.label}</span>
+                    <span className="font-semibold text-gray-800 text-sm">{item.label}</span>
                   </div>
                   <ChevronRight className="w-5 h-5 text-gray-400" />
                 </motion.div>
@@ -149,31 +220,31 @@ export default function AccountPage() {
           ))}
         </motion.div>
 
-        {/* BECOME A SELLER — HERO CARD */}
+        {/* BECOME A SELLER */}
         {sellerStatus === "none" && (
           <motion.div
             {...fadeInUp}
-            className="bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 rounded-2xl p-6 text-white shadow-2xl overflow-hidden relative"
+            className="bg-gradient-to-br from-purple-600 via-purple-500 to-teal-500 rounded-2xl p-5 text-white shadow-xl relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <Store className="w-7 h-7" />
+                  <div className="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                    <Store className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xl font-black">Become a Seller</p>
-                    <p className="text-sm opacity-90">Earn on campus. List now.</p>
+                    <p className="text-lg font-black">Become a Seller</p>
+                    <p className="text-xs opacity-90">Earn on campus. List now.</p>
                   </div>
                 </div>
                 <Link href="/seller/onboarding">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="bg-white text-purple-600 px-5 py-2.5 rounded-full font-bold shadow-lg flex items-center gap-2"
+                    className="bg-white text-purple-600 px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2"
                   >
-                    Start Now <ArrowRight className="w-4 h-4" />
+                    Start <ArrowRight className="w-4 h-4" />
                   </motion.button>
                 </Link>
               </div>
@@ -181,33 +252,17 @@ export default function AccountPage() {
           </motion.div>
         )}
 
-        {/* LOGOUT BUTTON — DANGER ZONE */}
+        {/* LOGOUT BUTTON */}
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLogout}
-          className="w-full mt-8 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center gap-3"
+          className="w-full mt-6 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-3"
         >
           <LogOut className="w-5 h-5" />
           Logout
         </motion.button>
       </div>
-
-      {/* BOTTOM NAV — STUDEx STYLE */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-white/20 z-50 shadow-2xl"
-      >
-        <div className="flex justify-around py-3">
-          <Link href="/" className="text-gray-500"><span className="text-xs">Home</span></Link>
-          <Link href="/categories" className="text-gray-500"><span className="text-xs">Categories</span></Link>
-          <Link href="/cart" className="text-gray-500"><span className="text-xs">Cart</span></Link>
-          <Link href="/wishlist" className="text-gray-500"><span className="text-xs">Wishlist</span></Link>
-          <div className="text-teal-600 font-black"><span className="text-xs">Account</span></div>
-        </div>
-      </motion.div>
     </>
   );
 }

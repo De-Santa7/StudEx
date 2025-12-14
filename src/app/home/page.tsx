@@ -31,7 +31,7 @@ export default function HomePage() {
   const campusServices = [
     {
       id: 1,
-      title: "Food & Snacks",
+      title: "Food ",
       icon: Package,
       img: "food-1.jpg",
       href: "/food",
@@ -40,7 +40,7 @@ export default function HomePage() {
     },
     {
       id: 2,
-      title: "Nails & Beauty",
+      title: "Nails ",
       icon: Sparkles,
       img: "nails-1.jpg",
       href: "/nails",
@@ -65,15 +65,8 @@ export default function HomePage() {
       color: "from-pink-100 to-purple-100",
       hover: "hover:border-pink-300",
     },
-    {
-      id: 5,
-      title: "Drinks",
-      icon: CupSoda,
-      img: "drinks-1.jpg",
-      href: "/drinks",
-      color: "from-teal-100 to-green-100",
-      hover: "hover:border-teal-300",
-    },
+    
+    ,
   ];
 
   const foodDeals = [
@@ -142,10 +135,10 @@ export default function HomePage() {
             >
               <div className="relative z-10 h-full flex flex-col justify-end">
                 <motion.h2 initial={{ x: -20 }} whileInView={{ x: 0 }} className="text-2xl font-bold drop-shadow-2xl">
-                  The Amazon for Campus Hustlers
+                  The Student Marketplace
                 </motion.h2>
                 <motion.p initial={{ x: -20 }} whileInView={{ x: 0 }} transition={{ delay: 0.1 }} className="text-sm mt-1 text-white/95 drop-shadow-xl">
-                  Food in 15 mins. Services in 60.
+                  Food and Services fully rendered.
                 </motion.p>
                 <motion.button {...buttonHover} className="mt-4 bg-white text-purple-600 px-6 py-2 rounded-full font-medium shadow-lg hover:shadow-xl transition-all inline-flex items-center gap-2 w-fit">
                   <Package className="w-4 h-4" /> Get Started

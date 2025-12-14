@@ -1,4 +1,4 @@
-// src/app/checkout/page.tsx  ← UNIVERSAL CHECKOUT: FOOD + SERVICES (PERFECT)
+// src/app/checkout/page.tsx  ← WITH ESCROW SYSTEM
 "use client";
 
 import Link from "next/link";
@@ -6,10 +6,12 @@ import Image from "next/image";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  Package, CreditCard, ArrowLeft, Shield, Lock, Sparkles, Check, Star, Calendar, MapPin, Clock
+  Package, CreditCard, ArrowLeft, Shield, Lock, Sparkles, Check, Calendar, MapPin, Clock, Wallet, Plus
 } from "lucide-react";
 import { useCartStore } from "@/lib/cartStore";
-import { useBookingStore } from "@/lib/bookingStore"; // ← NEW
+import { useBookingStore } from "@/lib/bookingStore";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authStore";
 import dynamic from "next/dynamic";
 
 const PaystackHook = dynamic(
@@ -18,6 +20,8 @@ const PaystackHook = dynamic(
 );
 
 export default function CheckoutPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const { cart, clearCart } = useCartStore();
   const { booking, clearBooking } = useBookingStore();
 
@@ -31,10 +35,12 @@ export default function CheckoutPage() {
 
   const [isPaystackReady, setIsPaystackReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "card">("card");
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const config = {
     reference: new Date().getTime().toString(),
-    email: "user@studex.com",
+    email: user?.email || "user@studex.com",
     amount: finalTotalInKobo,
     publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
     metadata: isServiceBooking
@@ -50,6 +56,10 @@ export default function CheckoutPage() {
   const initializePaymentRef = useRef<any>(null);
 
   useEffect(() => {
+    // Load wallet balance
+    const balance = localStorage.getItem("walletBalance");
+    setWalletBalance(balance ? parseFloat(balance) : 0);
+
     const loadPaystack = async () => {
       if (typeof window === "undefined") return;
       const PaystackFunction = await import("react-paystack").then(
@@ -61,6 +71,59 @@ export default function CheckoutPage() {
     loadPaystack();
   }, [finalTotalInKobo]);
 
+  // CREATE ORDER IN ESCROW
+  const createOrder = (paymentRef: string) => {
+    const orderId = `ORD-${Date.now()}`;
+    
+    const order = {
+      id: orderId,
+      reference: paymentRef,
+      buyerId: user?.email || "anonymous",
+      buyerName: user?.name || "Buyer",
+      sellerId: isServiceBooking ? booking.providerId : (cart[0]?.sellerId || "seller"),
+      sellerName: isServiceBooking ? booking.providerName : "Seller",
+      amount: finalTotal,
+      date: new Date().toISOString(),
+      status: "pending_confirmation", // WAITING FOR SELLER TO SHIP
+      type: isServiceBooking ? "service" : "food",
+      serviceDetails: isServiceBooking ? {
+        serviceName: booking.providerName,
+        date: booking.date,
+        time: booking.time,
+        location: booking.location,
+      } : null,
+      foodDetails: isFoodOrder ? cart : null,
+    };
+
+    // Save order
+    const orders = JSON.parse(localStorage.getItem("allOrders") || "[]");
+    orders.push(order);
+    localStorage.setItem("allOrders", JSON.stringify(orders));
+
+    // Add to escrow (admin holds the money)
+    const escrowAmount = parseFloat(localStorage.getItem("walletInEscrow") || "0");
+    localStorage.setItem("walletInEscrow", (escrowAmount + finalTotal).toString());
+
+    // Create transaction record
+    const transaction = {
+      id: `TXN-${Date.now()}`,
+      orderId: orderId,
+      amount: finalTotal,
+      date: new Date().toISOString(),
+      status: "in_escrow",
+      buyerName: order.buyerName,
+      sellerName: order.sellerName,
+      type: isServiceBooking ? "service" : "food",
+      serviceName: isServiceBooking ? booking.providerName : null,
+    };
+
+    const transactions = JSON.parse(localStorage.getItem("sellerTransactions") || "[]");
+    transactions.unshift(transaction);
+    localStorage.setItem("sellerTransactions", JSON.stringify(transactions));
+
+    return orderId;
+  };
+
   const handleCardPayment = useCallback(() => {
     if (!isPaystackReady || !initializePaymentRef.current) {
       alert("Paystack loading...");
@@ -70,19 +133,57 @@ export default function CheckoutPage() {
     setIsProcessing(true);
 
     initializePaymentRef.current({
-      onSuccess: () => {
+      onSuccess: (ref: any) => {
+        // Create order in escrow
+        const orderId = createOrder(ref.reference);
+
+        // Clear cart/booking
         if (isFoodOrder) clearCart();
         if (isServiceBooking) clearBooking();
         localStorage.removeItem("studex_cart");
-        window.location.href = "/success";
+
+        // Redirect to order confirmation
+        router.push(`/order-confirmation/${orderId}`);
       },
       onClose: () => {
         setIsProcessing(false);
       },
     });
-  }, [isPaystackReady, isFoodOrder, isServiceBooking, clearCart, clearBooking]);
+  }, [isPaystackReady, isFoodOrder, isServiceBooking, clearCart, clearBooking, finalTotal, booking, cart]);
 
-  // EMPTY STATE — ONLY IF NO CART AND NO BOOKING
+  const handleWalletPayment = () => {
+    if (walletBalance < finalTotal) {
+      alert(`Insufficient balance. You need ₦${(finalTotal - walletBalance).toLocaleString()} more.`);
+      return;
+    }
+
+    setIsProcessing(true);
+
+    // Deduct from wallet
+    const newBalance = walletBalance - finalTotal;
+    localStorage.setItem("walletBalance", newBalance.toString());
+
+    // Create order in escrow
+    const orderId = createOrder(`WALLET-${Date.now()}`);
+
+    // Clear cart/booking
+    setTimeout(() => {
+      if (isFoodOrder) clearCart();
+      if (isServiceBooking) clearBooking();
+      localStorage.removeItem("studex_cart");
+      router.push(`/order-confirmation/${orderId}`);
+    }, 1000);
+  };
+
+  const handlePayment = () => {
+    if (paymentMethod === "wallet") {
+      handleWalletPayment();
+    } else {
+      handleCardPayment();
+    }
+  };
+
+  // EMPTY STATE
   if (!isFoodOrder && !isServiceBooking) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 flex items-center justify-center p-6">
@@ -107,10 +208,10 @@ export default function CheckoutPage() {
 
   return (
     <>
-      {/* PREMIUM TOP BAR */}
+      {/* TOP BAR */}
       <motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         className="sticky top-0 bg-white/95 backdrop-blur-xl z-50 border-b border-purple-100 shadow-lg">
-        <div className="flex items-center justify-between px-6 py-5">
+        <div className="flex items-center justify-between px-6 py-5 max-w-4xl mx-auto">
           <Link href={isServiceBooking ? `/lashes/${booking?.providerId}` : "/cart"}>
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
               className="p-2 hover:bg-purple-100 rounded-full transition">
@@ -122,14 +223,14 @@ export default function CheckoutPage() {
               Secure Checkout
             </h1>
             <p className="text-xs text-gray-500 flex items-center gap-1 justify-center">
-              <Shield className="w-3 h-3" /> 256-bit Encryption
+              <Shield className="w-3 h-3" /> Money held safely in escrow
             </p>
           </div>
           <div className="w-10" />
         </div>
       </motion.div>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 px-6 pt-8 pb-32">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 px-6 pt-8 pb-32 max-w-4xl mx-auto">
 
         {/* ORDER SUMMARY */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -157,7 +258,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black">{booking.providerName}</h3>
-                    <p className="text-purple-700 font-bold">Lash Appointment</p>
+                    <p className="text-purple-700 font-bold">Service Booking</p>
                   </div>
                 </div>
 
@@ -198,8 +299,79 @@ export default function CheckoutPage() {
           </div>
         </motion.div>
 
-        {/* SECURITY BADGES */}
+        {/* PAYMENT METHODS - WITH WALLET */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="space-y-4 mb-6">
+          
+          <h2 className="text-xl font-black text-gray-900">Choose Payment Method</h2>
+
+          {/* WALLET OPTION */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setPaymentMethod("wallet")}
+            className={`w-full rounded-2xl p-6 transition-all ${
+              paymentMethod === "wallet"
+                ? "bg-gradient-to-r from-purple-600 to-teal-600 text-white shadow-xl"
+                : "bg-white text-gray-800 shadow-md"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Wallet className="w-8 h-8" />
+                <div className="text-left">
+                  <p className="text-xl font-black">Pay with Wallet</p>
+                  <p className={`text-sm font-medium ${paymentMethod === "wallet" ? "opacity-90" : "text-gray-600"}`}>
+                    Balance: ₦{walletBalance.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              {walletBalance < finalTotal && (
+                <div className="text-right">
+                  <Link href="/wallet/fund">
+                    <span className={`text-xs font-bold flex items-center gap-1 ${
+                      paymentMethod === "wallet" ? "text-white" : "text-purple-600"
+                    }`}>
+                      <Plus className="w-4 h-4" /> Fund
+                    </span>
+                  </Link>
+                  <p className="text-xs mt-1">Need ₦{(finalTotal - walletBalance).toLocaleString()} more</p>
+                </div>
+              )}
+              {paymentMethod === "wallet" && walletBalance >= finalTotal && (
+                <Check className="w-8 h-8" />
+              )}
+            </div>
+          </motion.button>
+
+          {/* CARD OPTION */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setPaymentMethod("card")}
+            className={`w-full rounded-2xl p-6 transition-all ${
+              paymentMethod === "card"
+                ? "bg-gradient-to-r from-purple-600 to-teal-600 text-white shadow-xl"
+                : "bg-white text-gray-800 shadow-md"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <CreditCard className="w-8 h-8" />
+                <div className="text-left">
+                  <p className="text-xl font-black">Pay with Card</p>
+                  <p className={`text-sm font-medium ${paymentMethod === "card" ? "opacity-90" : "text-gray-600"}`}>
+                    Visa, Mastercard, Verve
+                  </p>
+                </div>
+              </div>
+              {paymentMethod === "card" && <Check className="w-8 h-8" />}
+            </div>
+          </motion.button>
+        </motion.div>
+
+        {/* SECURITY BADGES */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white mb-6">
           <div className="flex items-center justify-center gap-8 text-center">
             <div className="flex flex-col items-center">
@@ -212,36 +384,7 @@ export default function CheckoutPage() {
             </div>
             <div className="flex flex-col items-center">
               <Check className="w-10 h-10 text-purple-600 mb-2" />
-              <p className="text-xs font-bold text-gray-700">Verified</p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* PAYMENT METHOD */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-purple-600 to-teal-600 rounded-3xl p-8 shadow-2xl text-white mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-black flex items-center gap-3">
-              <CreditCard className="w-7 h-7" /> Payment Method
-            </h2>
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-              <Star className="w-6 h-6 text-yellow-300 fill-current" />
-            </motion.div>
-          </div>
-          <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                <CreditCard className="w-10 h-10 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xl font-black text-white">Card Payment</p>
-                <p className="text-sm text-white/80 font-medium">Secured by Paystack</p>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-4">
-              <div className="px-4 py-2 bg-white/20 rounded-lg text-xs font-bold">VISA</div>
-              <div className="px-4 py-2 bg-white/20 rounded-lg text-xs font-bold">MASTERCARD</div>
-              <div className="px-4 py-2 bg-white/20 rounded-lg text-xs font-bold">VERVE</div>
+              <p className="text-xs font-bold text-gray-700">Escrow</p>
             </div>
           </div>
         </motion.div>
@@ -252,30 +395,35 @@ export default function CheckoutPage() {
           <Shield className="w-12 h-12 text-purple-600 mx-auto mb-3" />
           <p className="font-black text-lg text-gray-900">100% Money-Back Guarantee</p>
           <p className="text-sm text-gray-700 mt-2">
-            {isServiceBooking ? "Payment held in escrow until service is PERFECT" : "Your food will arrive hot & fresh"}
+            Your payment is held safely by StudEx. Funds are only released to the seller after you confirm receipt. You can dispute anytime within 7 days.
           </p>
         </motion.div>
 
         {/* PAY BUTTON */}
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-          onClick={handleCardPayment}
-          disabled={!isPaystackReady || isProcessing}
+          onClick={handlePayment}
+          disabled={(paymentMethod === "card" && (!isPaystackReady || isProcessing)) || (paymentMethod === "wallet" && walletBalance < finalTotal) || isProcessing}
           className={`w-full py-8 rounded-3xl font-black text-3xl shadow-2xl 
             bg-gradient-to-r from-purple-600 to-teal-600 text-white
             flex items-center justify-center gap-4
-            ${!isPaystackReady || isProcessing ? "opacity-70 cursor-not-allowed" : "hover:shadow-purple-500/50"}
+            ${((paymentMethod === "card" && (!isPaystackReady || isProcessing)) || (paymentMethod === "wallet" && walletBalance < finalTotal) || isProcessing) ? "opacity-70 cursor-not-allowed" : "hover:shadow-purple-500/50"}
           `}
         >
           {isProcessing ? (
             <> <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
                 <Lock className="w-8 h-8" />
-              </motion.div> Processing...
+              </motion.div> Processing Payment...
             </>
-          ) : !isPaystackReady ? (
+          ) : paymentMethod === "card" && !isPaystackReady ? (
             <> <Shield className="w-8 h-8" /> Loading Secure Payment... </>
+          ) : paymentMethod === "wallet" && walletBalance < finalTotal ? (
+            <> <Wallet className="w-8 h-8" /> Insufficient Balance </>
           ) : (
-            <> <CreditCard className="w-10 h-10" /> Pay ₦{finalTotal.toLocaleString()} Now </>
+            <>
+              {paymentMethod === "wallet" ? <Wallet className="w-10 h-10" /> : <CreditCard className="w-10 h-10" />}
+              Pay ₦{finalTotal.toLocaleString()} Now
+            </>
           )}
         </motion.button>
 
