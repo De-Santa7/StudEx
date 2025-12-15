@@ -1,28 +1,21 @@
-// src/app/page.tsx  ← Your OFFICIAL, PREMIUM Landing Page
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowRight, Sparkles, Heart, MessageCircle, Shield, Zap, Users, Star, CheckCircle, TrendingUp, Award } from "lucide-react";
+import { ArrowRight, Sparkles, Utensils, Shirt, Scissors, TrendingUp, Shield, MessageCircle, Zap, Heart, Users, Star, CheckCircle, Award } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/authStore";
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
-  const { isLoggedIn } = useAuth();
-  const router = useRouter();
+  const [isLoggedIn] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    
-    // Redirect logged-in users to home
-    if (isLoggedIn) {
-      router.push("/home");
-    }
-  }, [isLoggedIn, router]);
+  }, []);
 
-  // Show nothing while checking auth or if logged in
+  const navigate = (path) => {
+    window.location.href = path;
+  };
+
   if (!mounted || isLoggedIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-teal-900 flex items-center justify-center">
@@ -81,18 +74,18 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-6 py-3 mb-8"
           >
             <TrendingUp className="w-5 h-5 text-teal-400" />
-            <span className="text-white font-bold text-sm">Nigeria's #1 Campus Marketplace</span>
+            <span className="text-white font-bold text-sm">Nigeria's #1 Campus Service Marketplace</span>
           </motion.div>
 
           <motion.h1
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-8xl font-black text-white leading-tight mb-6"
+            className="text-4xl md:text-6xl font-black text-white leading-tight mb-6"
           >
-            Beauty Meets
+            The Campus Marketplace
             <span className="block bg-gradient-to-r from-pink-400 via-purple-400 to-teal-400 bg-clip-text text-transparent animate-gradient">
-              Convenience
+              for Student Skills
             </span>
           </motion.h1>
 
@@ -102,7 +95,7 @@ export default function LandingPage() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-xl md:text-3xl text-white/95 mt-6 font-medium max-w-3xl mx-auto"
           >
-            Book lashes, nails, makeup artists & barbers near you — fast, safe, and affordable.
+            Book lashes, nails, laundry & food from verified vendors — fast, safe, and affordable.
           </motion.p>
 
           <motion.div
@@ -111,25 +104,23 @@ export default function LandingPage() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Link href="/signup">
-              <motion.button
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 60px rgba(168, 85, 247, 0.4)" }}
-                whileTap={{ scale: 0.95 }}
-                className="group px-12 py-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-2xl rounded-full shadow-2xl flex items-center gap-4"
-              >
-                Get Started Free
-                <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition" />
-              </motion.button>
-            </Link>
-            <Link href="/login">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-12 py-6 bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white font-bold text-2xl rounded-full hover:bg-white/20 transition"
-              >
-                Sign In
-              </motion.button>
-            </Link>
+            <motion.button
+              onClick={() => navigate("/signup")}
+              whileHover={{ scale: 1.05, boxShadow: "0 20px 60px rgba(168, 85, 247, 0.4)" }}
+              whileTap={{ scale: 0.95 }}
+              className="group px-12 py-6 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-2xl rounded-full shadow-2xl flex items-center gap-4"
+            >
+              Get Started Free
+              <ArrowRight className="w-8 h-8 group-hover:translate-x-2 transition" />
+            </motion.button>
+            <motion.button
+              onClick={() => navigate("/login")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-12 py-6 bg-white/10 backdrop-blur-xl border-2 border-white/30 text-white font-bold text-2xl rounded-full hover:bg-white/20 transition"
+            >
+              Sign In
+            </motion.button>
           </motion.div>
 
           {/* Stats */}
@@ -172,7 +163,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* FEATURES - PREMIUM DESIGN */}
+      {/* SERVICES SHOWCASE */}
       <section className="py-32 bg-gradient-to-br from-gray-50 to-purple-50 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-96 h-96 bg-purple-600 rounded-full blur-3xl" />
@@ -194,6 +185,70 @@ export default function LandingPage() {
               <Award className="w-16 h-16 text-purple-600" />
             </motion.div>
             <h2 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent mb-4">
+              Our Services
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Everything you need, one tap away
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { 
+                icon: Sparkles, 
+                title: "Lashes", 
+                desc: "Expert lash extensions & maintenance from certified technicians",
+                color: "from-pink-500 to-pink-600"
+              },
+              { 
+                icon: Scissors, 
+                title: "Nails", 
+                desc: "Manicures, pedicures, nail art & gel services",
+                color: "from-purple-500 to-purple-600"
+              },
+              { 
+                icon: Shirt, 
+                title: "Laundry", 
+                desc: "Fast, professional laundry & ironing services",
+                color: "from-blue-500 to-blue-600"
+              },
+              { 
+                icon: Utensils, 
+                title: "Food", 
+                desc: "Fresh meals delivered to your hostel or residence",
+                color: "from-orange-500 to-orange-600"
+              },
+            ].map((service, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -15, scale: 1.05 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl hover:shadow-2xl transition border border-white"
+              >
+                <div className={`w-16 h-16 bg-gradient-to-r ${service.color} rounded-2xl flex items-center justify-center mb-6`}>
+                  <service.icon className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-3">{service.title}</h3>
+                <p className="text-gray-600 text-lg">{service.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WHY CHOOSE STUDEX */}
+      <section className="py-32 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-purple-600 to-teal-600 bg-clip-text text-transparent mb-4">
               Why Choose StudEx?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -203,12 +258,12 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Sparkles, title: "Premium Vendors Only", desc: "Verified lash techs, barbers & makeup artists", color: "purple" },
               { icon: Shield, title: "Safe & Secure", desc: "Escrow payments — money held till job is done", color: "blue" },
               { icon: MessageCircle, title: "Chat & Bargain", desc: "Negotiate price directly with seller", color: "teal" },
               { icon: Zap, title: "Instant Booking", desc: "Book in 10 seconds, no back and forth", color: "yellow" },
               { icon: Heart, title: "Save Your Faves", desc: "Wishlist vendors you love", color: "pink" },
               { icon: Users, title: "Real Reviews", desc: "See what others are saying before booking", color: "green" },
+              { icon: TrendingUp, title: "Best Prices", desc: "Compare prices and get the best deals", color: "purple" },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -217,7 +272,7 @@ export default function LandingPage() {
                 whileHover={{ y: -10, scale: 1.02 }}
                 transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-xl hover:shadow-2xl transition border border-white"
+                className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition border border-gray-200"
               >
                 <div className={`w-16 h-16 bg-gradient-to-r from-${feature.color}-100 to-${feature.color}-200 rounded-2xl flex items-center justify-center mb-6`}>
                   <feature.icon className={`w-10 h-10 text-${feature.color}-600`} />
@@ -249,14 +304,14 @@ export default function LandingPage() {
             They Love StudEx
           </motion.h2>
           <p className="text-xl text-white/80 mb-16 max-w-2xl mx-auto">
-            Join thousands of happy students already booking services
+            Join thousands of happy students already using StudEx
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: "Chioma", text: "Finally found a lash tech that doesn't ghost! Booked same day", rating: 5, course: "Mass Comm" },
-              { name: "David", text: "My barber now has 300+ bookings from here. Game changer!", rating: 5, course: "Engineering" },
-              { name: "Aisha", text: "Got my birthday makeup done for 35k instead of 60k. Bargained sharp!", rating: 5, course: "Law" },
+              { name: "Chioma", text: "Got lashes done in 2 hours. The technician was amazing!", rating: 5, course: "Mass Comm" },
+              { name: "David", text: "My laundry is back same day, perfectly done. No stress!", rating: 5, course: "Engineering" },
+              { name: "Aisha", text: "Food delivery is fast and hot. Better than the cafeteria!", rating: 5, course: "Law" },
             ].map((t, i) => (
               <motion.div
                 key={i}
@@ -303,31 +358,30 @@ export default function LandingPage() {
             whileInView={{ scale: 1, opacity: 1 }}
             className="text-6xl md:text-8xl font-black text-white mb-6"
           >
-            Ready to Glow Up?
+            Everything You Need
           </motion.h2>
           <p className="text-2xl text-white/80 mb-12 max-w-2xl mx-auto">
-            Join 10,000+ Nigerian students already using StudEx
+            One app. All your campus services.
           </p>
 
           <motion.div
             initial={{ y: 50, opacity: 0 }}
             whileInView={{ y: 0, opacity: 1 }}
           >
-            <Link href="/signup">
-              <motion.button
-                whileHover={{ scale: 1.1, boxShadow: "0 30px 80px rgba(168, 85, 247, 0.5)" }}
-                whileTap={{ scale: 0.95 }}
-                className="px-20 py-10 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-4xl rounded-full shadow-2xl flex items-center gap-6 mx-auto"
+            <motion.button
+              onClick={() => navigate("/signup")}
+              whileHover={{ scale: 1.1, boxShadow: "0 30px 80px rgba(168, 85, 247, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              className="px-20 py-10 bg-gradient-to-r from-purple-600 to-teal-600 text-white font-black text-4xl rounded-full shadow-2xl flex items-center gap-6 mx-auto"
+            >
+              Start Booking Now
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                Start Booking Now
-                <motion.div
-                  animate={{ rotate: [0, 360] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  <Sparkles className="w-12 h-12" />
-                </motion.div>
-              </motion.button>
-            </Link>
+                <Sparkles className="w-12 h-12" />
+              </motion.div>
+            </motion.button>
           </motion.div>
 
           <motion.div
@@ -358,9 +412,9 @@ export default function LandingPage() {
             </motion.p>
           </div>
           <div className="flex justify-center gap-8 mb-8 text-sm">
-            <Link href="/terms" className="text-white/60 hover:text-white transition">Terms</Link>
-            <Link href="/privacy" className="text-white/60 hover:text-white transition">Privacy</Link>
-            <Link href="/contact" className="text-white/60 hover:text-white transition">Contact</Link>
+            <button onClick={() => navigate("/terms")} className="text-white/60 hover:text-white transition">Terms</button>
+            <button onClick={() => navigate("/privacy")} className="text-white/60 hover:text-white transition">Privacy</button>
+            <button onClick={() => navigate("/contact")} className="text-white/60 hover:text-white transition">Contact</button>
           </div>
           <p className="text-white/40 text-center text-sm">© 2025 StudEx. All rights reserved.</p>
         </div>

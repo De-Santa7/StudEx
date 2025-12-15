@@ -5,75 +5,87 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft,
   Package,
-  Truck,
   CheckCircle,
   XCircle,
   Clock,
   User,
   Calendar,
   DollarSign,
-  Receipt,
+  AlertCircle,
   Shield,
+  MapPin,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export default function AdminOrderDetail() {
+interface Order {
+  id: string;
+  buyerName: string;
+  sellerName: string;
+  amount: number;
+  date: string;
+  status: "pending_confirmation" | "completed" | "disputed" | "refunded";
+  type: "service" | "food";
+  serviceDetails?: {
+    serviceName: string;
+    date: string;
+    time: string;
+    location: string;
+  };
+  foodDetails?: any[];
+}
+
+function AdminOrderDetail() {
   const { id } = useParams();
   const router = useRouter();
-  const [order, setOrder] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [order, setOrder] = useState<Order | null>(null);
   const [refundLoading, setRefundLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const allOrders = JSON.parse(localStorage.getItem("adminOrders") || "[]");
-    const found = allOrders.find((o: any) => o.id === id);
-    setOrder(found);
-
-    if (found) {
-      const mockItems = [
-        { name: "MacBook Pro 2023 16GB", qty: 1, price: 850000 },
-        { name: "Wireless Mouse", qty: 2, price: 15000 },
-        { name: "USB-C Hub", qty: 1, price: 12000 },
-        { name: "Laptop Stand", qty: 1, price: 18000 },
-      ].slice(0, found.items);
-
-      const calculatedTotal = mockItems.reduce((sum, i) => sum + i.price * i.qty, 0);
-      if (calculatedTotal !== found.total && mockItems.length > 0) {
-        mockItems[0].price += found.total - calculatedTotal;
-      }
-      setItems(mockItems);
-    }
+    setMounted(true);
+    const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
+    const found = allOrders.find((o: Order) => o.id === id);
+    setOrder(found || null);
   }, [id]);
 
   const handleRefund = () => {
-    if (!order || order.status === "cancelled" || order.status === "delivered") return;
+    if (!order || order.status === "refunded") return;
 
     setRefundLoading(true);
+
     setTimeout(() => {
-      const allOrders = JSON.parse(localStorage.getItem("adminOrders") || "[]");
-      const updated = allOrders.map((o: any) =>
-        o.id === order.id ? { ...o, status: "cancelled" } : o
+      // Update order status to refunded
+      const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
+      const updated = allOrders.map((o: Order) =>
+        o.id === order.id ? { ...o, status: "refunded" as const } : o
       );
-      localStorage.setItem("adminOrders", JSON.stringify(updated));
-      setOrder({ ...order, status: "cancelled" });
+      localStorage.setItem("allOrders", JSON.stringify(updated));
+
+      // Refund to buyer's wallet
+      const buyerKey = `buyer_${order.id.split("-")[0]}`;
+      const buyerWallet = parseFloat(localStorage.getItem(buyerKey) || "0");
+      localStorage.setItem(buyerKey, (buyerWallet + order.amount).toString());
+
+      // Deduct from escrow
+      const escrow = parseFloat(localStorage.getItem("walletInEscrow") || "0");
+      localStorage.setItem("walletInEscrow", Math.max(0, escrow - order.amount).toString());
+
+      setOrder({ ...order, status: "refunded" });
       setRefundLoading(false);
-      alert(`Order ${order.id} cancelled & refunded successfully`);
-    }, 1800);
+      alert(`✓ ₦${order.amount.toLocaleString()} refunded to buyer`);
+
+      setTimeout(() => router.push("/admin/orders"), 1000);
+    }, 1500);
   };
 
-  const timeline = [
-    { status: "pending", label: "Order Placed", icon: <Receipt className="w-5 h-5" /> },
-    { status: "confirmed", label: "Confirmed", icon: <Shield className="w-5 h-5" /> },
-    { status: "shipped", label: "Shipped", icon: <Truck className="w-5 h-5" /> },
-    { status: "delivered", label: "Delivered", icon: <CheckCircle className="w-5 h-5" /> },
-  ];
+  if (!mounted) return null;
 
   if (!order) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-6">
-          <Package className="w-20 h-20 mx-auto text-white/10" />
+          <AlertCircle className="w-20 h-20 mx-auto text-white/20" />
           <h2 className="text-3xl font-black text-white">Order Not Found</h2>
           <button
             onClick={() => router.push("/admin/orders")}
@@ -86,7 +98,10 @@ export default function AdminOrderDetail() {
     );
   }
 
-  const currentStep = order.status === "cancelled" ? -1 : timeline.findIndex(s => s.status === order.status);
+  const isPending = order.status === "pending_confirmation";
+  const isCompleted = order.status === "completed";
+  const isDisputed = order.status === "disputed";
+  const isRefunded = order.status === "refunded";
 
   return (
     <>
@@ -105,159 +120,216 @@ export default function AdminOrderDetail() {
         </div>
       </motion.div>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-5 pt-4 pb-28 space-y-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-5 pt-4 pb-32 space-y-6">
 
         {/* HERO CARD */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           className={`rounded-3xl p-7 text-white shadow-2xl ${
-            order.status === "cancelled"
-              ? "bg-gradient-to-r from-red-600 to-pink-600"
+            isRefunded
+              ? "bg-gradient-to-r from-blue-600 to-cyan-600"
+              : isDisputed
+              ? "bg-gradient-to-r from-red-600 to-orange-600"
+              : isPending
+              ? "bg-gradient-to-r from-amber-600 to-orange-600"
               : "bg-gradient-to-r from-emerald-500 to-teal-600"
           }`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-5xl font-black">₦{order.total.toLocaleString()}</p>
+              <p className="text-5xl font-black">₦{order.amount.toLocaleString()}</p>
               <p className="text-white/80 mt-2 flex items-center gap-2">
-                <Calendar className="w-5 h-5" /> {order.date}
+                <Calendar className="w-5 h-5" /> {new Date(order.date).toLocaleString()}
               </p>
             </div>
-            <div className="px-6 py-3 rounded-full font-black text-lg flex items-center gap-3 bg-white/20">
-              {order.status === "pending" && <Clock className="w-6 h-6" />}
-              {order.status === "shipped" && <Truck className="w-6 h-6" />}
-              {order.status === "delivered" && <CheckCircle className="w-6 h-6" />}
-              {order.status === "cancelled" && <XCircle className="w-6 h-6" />}
-              {order.status.toUpperCase()}
+            <div className={`px-6 py-3 rounded-full font-black text-lg flex items-center gap-3 ${
+              isRefunded ? "bg-white/20" :
+              isDisputed ? "bg-white/20" :
+              isPending ? "bg-white/20" :
+              "bg-white/20"
+            }`}>
+              {isPending && <Clock className="w-6 h-6" />}
+              {isCompleted && <CheckCircle className="w-6 h-6" />}
+              {isDisputed && <AlertCircle className="w-6 h-6" />}
+              {isRefunded && <XCircle className="w-6 h-6" />}
+              {order.status === "pending_confirmation" ? "PENDING" : order.status.toUpperCase()}
             </div>
           </div>
         </motion.div>
 
-        {/* TIMELINE */}
-        {order.status !== "cancelled" && (
-          <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-            <h3 className="text-xl font-black text-white mb-6">Delivery Timeline</h3>
-            <div className="space-y-8">
-              {timeline.map((step, i) => (
-                <div key={i} className="flex items-center gap-4 relative">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 transition-all ${
-                    i <= currentStep ? "bg-emerald-500 text-white" : "bg-white/10 text-white/40"
-                  }`}>
-                    {step.icon}
+        {/* STATUS INFO */}
+        {isPending && (
+          <motion.div className="bg-amber-500/20 border border-amber-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <Clock className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Awaiting Seller Confirmation</p>
+                <p className="text-amber-300 text-sm mt-1">Seller needs to mark this order as complete</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {isCompleted && (
+          <motion.div className="bg-emerald-500/20 border border-emerald-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Awaiting Buyer Confirmation</p>
+                <p className="text-emerald-300 text-sm mt-1">Buyer needs to confirm receipt to release escrow funds</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {isDisputed && (
+          <motion.div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Under Dispute</p>
+                <p className="text-red-300 text-sm mt-1">This order has been flagged for dispute resolution by admin</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {isRefunded && (
+          <motion.div className="bg-blue-500/20 border border-blue-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Refunded</p>
+                <p className="text-blue-300 text-sm mt-1">Money has been returned to buyer's wallet</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* BUYER & SELLER */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <User className="w-6 h-6 text-blue-400" /> Buyer
+            </h3>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center text-xl font-black text-white">
+                {order.buyerName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </div>
+              <div>
+                <p className="text-white font-bold text-lg">{order.buyerName}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <User className="w-6 h-6 text-purple-400" /> Seller
+            </h3>
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-xl font-black text-white">
+                {order.sellerName
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </div>
+              <div>
+                <p className="text-white font-bold text-lg">{order.sellerName}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ORDER DETAILS */}
+        {order.type === "service" && order.serviceDetails && (
+          <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4">Service Details</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-white/60 text-sm">Service</p>
+                <p className="text-white font-bold text-lg">{order.serviceDetails.serviceName}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-white/60">Date</p>
+                  <p className="text-white font-medium">{order.serviceDetails.date}</p>
+                </div>
+                <div>
+                  <p className="text-white/60">Time</p>
+                  <p className="text-white font-medium">{order.serviceDetails.time}</p>
+                </div>
+                <div>
+                  <p className="text-white/60 flex items-center gap-1">
+                    <MapPin className="w-4 h-4" /> Location
+                  </p>
+                  <p className="text-white font-medium">{order.serviceDetails.location}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {order.type === "food" && order.foodDetails && order.foodDetails.length > 0 && (
+          <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <Package className="w-6 h-6" /> Food Items
+            </h3>
+            <div className="space-y-3">
+              {order.foodDetails.map((item: any, i: number) => (
+                <div key={i} className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                  <div>
+                    <p className="text-white font-bold">{item.title}</p>
+                    <p className="text-white/60 text-sm">Qty: {item.qty}</p>
                   </div>
-                  <div className="flex-1">
-                    <p className={`font-bold ${i <= currentStep ? "text-white" : "text-white/40"}`}>
-                      {step.label}
-                    </p>
-                    {i < currentStep && <p className="text-white/60 text-sm">Completed</p>}
-                    {i === currentStep && <p className="text-emerald-400 text-sm">In Progress</p>}
-                  </div>
-                  {i < timeline.length - 1 && (
-                    <div className={`absolute left-6 top-14 w-0.5 h-20 ${i < currentStep ? "bg-emerald-500" : "bg-white/10"}`} />
-                  )}
+                  <p className="text-emerald-400 font-bold">₦{(item.price * item.qty).toLocaleString()}</p>
                 </div>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* ORDER ITEMS */}
-        <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-          <h3 className="text-xl font-black text-white mb-4 flex items-center gap-3">
-            <Package className="w-7 h-7" /> Items ({order.items})
-          </h3>
-          <div className="space-y-4">
-            {items.map((item, i) => (
-              <div key={i} className="flex items-center justify-between bg-white/5 rounded-2xl p-4">
-                <div>
-                  <p className="text-white font-bold">{item.name}</p>
-                  <p className="text-white/60 text-sm">Qty: {item.qty}</p>
-                </div>
-                <p className="text-xl font-black text-emerald-400">
-                  ₦{(item.price * item.qty).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* BUYER & SELLER */}
-        <div className="grid grid-cols-2 gap-4">
-          <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-            <h3 className="text-lg font-black text-white mb-4">Buyer</h3>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center text-2xl font-black text-white">
-                {order.buyer.split(" ").map((n: string) => n[0]).join("")}
-              </div>
-              <div>
-                <p className="text-white font-bold">{order.buyer}</p>
-                <p className="text-purple-300 text-sm">ID: {order.buyerId}</p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-            <h3 className="text-lg font-black text-white mb-4">Seller</h3>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-2xl font-black text-white">
-                {order.seller.split(" ").map((n: string) => n[0]).join("")}
-              </div>
-              <div>
-                <p className="text-white font-bold">{order.seller}</p>
-                <p className="text-purple-300 text-sm">ID: {order.sellerId}</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* TRACKING */}
-        {order.tracking && (
-          <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-            <div className="flex items-center gap-3">
-              <Truck className="w-7 h-7 text-blue-400" />
-              <div>
-                <p className="text-white font-bold">Tracking Number</p>
-                <p className="text-purple-300 font-mono text-lg">{order.tracking}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* REFUND BUTTON — NOW ABOVE BOTTOM NAV */}
-        {order.status !== "cancelled" && order.status !== "delivered" && (
+        {/* ACTION BUTTONS */}
+        {isPending && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="pb-4"
+            className="space-y-3"
           >
             <button
               onClick={handleRefund}
               disabled={refundLoading}
-              className="w-full py-5 bg-gradient-to-r from-red-600 to-pink-600 text-white font-black text-xl rounded-3xl shadow-2xl flex items-center justify-center gap-3 hover:shadow-red-500/50 transition disabled:opacity-70"
+              className="w-full py-5 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-black text-lg rounded-2xl shadow-lg hover:shadow-amber-500/50 transition disabled:opacity-70"
             >
-              {refundLoading ? (
-                "Processing Refund..."
-              ) : (
-                <>
-                  <XCircle className="w-7 h-7" />
-                  Cancel & Refund Order
-                </>
-              )}
+              {refundLoading ? "Processing..." : "⚠️ Issue Refund"}
             </button>
+            <p className="text-white/50 text-xs text-center">Only issue refund if order is invalid</p>
           </motion.div>
         )}
-      </div>
 
-      {/* BOTTOM NAV — NOW VISIBLE */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent backdrop-blur-xl border-t border-white/10 z-40">
-        <div className="flex justify-around py-4">
-          <button className="text-white/60">Dashboard</button>
-          <button className="text-white/60">Users</button>
-          <button className="text-white font-black text-lg">Orders</button>
-          <button className="text-white/60">Payouts</button>
-        </div>
+        {isCompleted && (
+          <motion.div className="bg-emerald-500/20 border border-emerald-500/50 rounded-2xl p-4 backdrop-blur-xl">
+            <p className="text-emerald-300 text-center font-bold">
+              ✓ Awaiting buyer confirmation to release escrow funds
+            </p>
+          </motion.div>
+        )}
+
+        {isDisputed && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            onClick={() => router.push("/admin/disputes")}
+            className="w-full py-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-bold rounded-2xl"
+          >
+            View in Disputes → Resolve
+          </motion.button>
+        )}
       </div>
     </>
   );
 }
+
+export default AdminOrderDetail;

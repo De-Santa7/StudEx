@@ -5,97 +5,40 @@ import { motion } from "framer-motion";
 import {
   ChevronLeft,
   Package,
-  Truck,
-  CheckCircle,
-  X,
   Clock,
+  CheckCircle,
+  AlertCircle,
   Search,
   ArrowRight,
   Calendar,
   DollarSign,
+  Shield,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 
-export default function AdminOrders() {
+interface Order {
+  id: string;
+  buyerName: string;
+  sellerName: string;
+  amount: number;
+  date: string;
+  status: "pending_confirmation" | "completed" | "disputed" | "refunded";
+  type: "service" | "food";
+}
+
+function AdminOrders() {
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("adminOrders");
-    let loadedOrders: any[] = [];
-
-    if (saved) {
-      loadedOrders = JSON.parse(saved);
-    } else {
-      const mockOrders = [
-        {
-          id: "ORD001",
-          buyer: "Chinedu Okeke",
-          buyerId: "1",
-          seller: "Amaka Bello",
-          sellerId: "SELL002",
-          items: 3,
-          total: 48500,
-          status: "delivered",
-          date: "Oct 28, 2025",
-          tracking: "SHIPPED-8891",
-        },
-        {
-          id: "ORD002",
-          buyer: "Victor Osahon",
-          buyerId: "3",
-          seller: "Chioma Eze",
-          sellerId: "SELL004",
-          items: 1,
-          total: 12500,
-          status: "shipped",
-          date: "Oct 27, 2025",
-          tracking: "SHIPPED-7742",
-        },
-        {
-          id: "ORD003",
-          buyer: "Tolu Adebayo",
-          buyerId: "5",
-          seller: "Amaka Bello",
-          sellerId: "SELL002",
-          items: 5,
-          total: 92000,
-          status: "pending",
-          date: "Oct 26, 2025",
-          tracking: null,
-        },
-        {
-          id: "ORD004",
-          buyer: "Sarah Johnson",
-          buyerId: "6",
-          seller: "Victor Osahon",
-          sellerId: "SELL003",
-          items: 2,
-          total: 34000,
-          status: "cancelled",
-          date: "Oct 25, 2025",
-          tracking: null,
-        },
-        {
-          id: "ORD005",
-          buyer: "Ifeanyi Nwosu",
-          buyerId: "7",
-          seller: "Amaka Bello",
-          sellerId: "SELL002",
-          items: 4,
-          total: 67000,
-          status: "shipped",
-          date: "Oct 24, 2025",
-          tracking: "SHIPPED-5501",
-        },
-      ];
-      localStorage.setItem("adminOrders", JSON.stringify(mockOrders));
-      loadedOrders = mockOrders;
-    }
-    setOrders(loadedOrders);
+    setMounted(true);
+    const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
+    console.log("Admin loading orders:", allOrders); // Debug
+    setOrders(allOrders);
   }, []);
 
   const filteredOrders = useMemo(() => {
@@ -106,9 +49,9 @@ export default function AdminOrders() {
       filtered = filtered.filter(
         (o) =>
           o.id.toLowerCase().includes(q) ||
-          o.buyer.toLowerCase().includes(q) ||
-          o.seller.toLowerCase().includes(q) ||
-          o.total.toString().includes(q)
+          o.buyerName.toLowerCase().includes(q) ||
+          o.sellerName.toLowerCase().includes(q) ||
+          o.amount.toString().includes(q)
       );
     }
 
@@ -116,37 +59,49 @@ export default function AdminOrders() {
       filtered = filtered.filter((o) => o.status === statusFilter);
     }
 
-    return filtered.sort((a, b) => b.id.localeCompare(a.id));
+    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [orders, searchQuery, statusFilter]);
 
   const stats = {
     total: orders.length,
-    pending: orders.filter((o) => o.status === "pending").length,
-    shipped: orders.filter((o) => o.status === "shipped").length,
-    delivered: orders.filter((o) => o.status === "delivered").length,
-    cancelled: orders.filter((o) => o.status === "cancelled").length,
+    pending: orders.filter((o) => o.status === "pending_confirmation").length,
+    completed: orders.filter((o) => o.status === "completed").length,
+    disputed: orders.filter((o) => o.status === "disputed").length,
+    refunded: orders.filter((o) => o.status === "refunded").length,
   };
 
   const getStatusBadge = (status: string) => {
     const base = "px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm";
     switch (status) {
-      case "pending": return `${base} bg-amber-500/20 text-amber-300 border border-amber-500/50`;
-      case "shipped": return `${base} bg-blue-500/20 text-blue-300 border border-blue-500/50`;
-      case "delivered": return `${base} bg-emerald-500/20 text-emerald-300 border border-emerald-500/50`;
-      case "cancelled": return `${base} bg-red-500/20 text-red-300 border border-red-500/50`;
-      default: return `${base} bg-gray-500/20 text-gray-300`;
+      case "pending_confirmation":
+        return `${base} bg-amber-500/20 text-amber-300 border border-amber-500/50`;
+      case "completed":
+        return `${base} bg-emerald-500/20 text-emerald-300 border border-emerald-500/50`;
+      case "disputed":
+        return `${base} bg-red-500/20 text-red-300 border border-red-500/50`;
+      case "refunded":
+        return `${base} bg-blue-500/20 text-blue-300 border border-blue-500/50`;
+      default:
+        return `${base} bg-gray-500/20 text-gray-300`;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "pending": return <Clock className="w-5 h-5" />;
-      case "shipped": return <Truck className="w-5 h-5" />;
-      case "delivered": return <CheckCircle className="w-5 h-5" />;
-      case "cancelled": return <X className="w-5 h-5" />;
-      default: return <Package className="w-5 h-5" />;
+      case "pending_confirmation":
+        return <Clock className="w-5 h-5" />;
+      case "completed":
+        return <CheckCircle className="w-5 h-5" />;
+      case "disputed":
+        return <AlertCircle className="w-5 h-5" />;
+      case "refunded":
+        return <ArrowRight className="w-5 h-5" />;
+      default:
+        return <Package className="w-5 h-5" />;
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <>
@@ -160,7 +115,9 @@ export default function AdminOrders() {
           <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-xl transition">
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="text-xl font-black text-white">Orders</h1>
+          <h1 className="text-xl font-black text-white flex items-center gap-3">
+            <Package className="w-6 h-6" /> Orders
+          </h1>
           <div className="w-10" />
         </div>
 
@@ -177,7 +134,7 @@ export default function AdminOrders() {
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {["all", "pending", "shipped", "delivered", "cancelled"].map((f) => (
+            {["all", "pending_confirmation", "completed", "disputed", "refunded"].map((f) => (
               <button
                 key={f}
                 onClick={() => setStatusFilter(f)}
@@ -187,7 +144,12 @@ export default function AdminOrders() {
                     : "bg-white/10 text-white/60 hover:bg-white/20"
                 }`}
               >
-                {f.charAt(0).toUpperCase() + f.slice(1)} ({stats[f === "all" ? "total" : f]})
+                {f === "all"
+                  ? "All"
+                  : f === "pending_confirmation"
+                  ? "Pending"
+                  : f.charAt(0).toUpperCase() + f.slice(1)}{" "}
+                ({stats[f === "all" ? "total" : (f as keyof typeof stats)]})
               </button>
             ))}
           </div>
@@ -195,14 +157,14 @@ export default function AdminOrders() {
       </motion.div>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 px-5 pt-4 pb-32 space-y-6">
-
-        {/* STATS GRID — FIXED */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* STATS GRID */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[
             { label: "Total Orders", value: stats.total, color: "from-purple-600 to-pink-600" },
             { label: "Pending", value: stats.pending, color: "from-amber-500 to-orange-600" },
-            { label: "Shipped", value: stats.shipped, color: "from-blue-500 to-cyan-600" },
-            { label: "Delivered", value: stats.delivered, color: "from-emerald-500 to-teal-600" },
+            { label: "Completed", value: stats.completed, color: "from-emerald-500 to-teal-600" },
+            { label: "Disputed", value: stats.disputed, color: "from-red-500 to-orange-600" },
+            { label: "Refunded", value: stats.refunded, color: "from-blue-500 to-cyan-600" },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -220,9 +182,10 @@ export default function AdminOrders() {
         {/* ORDERS LIST */}
         <div className="space-y-4">
           {filteredOrders.length === 0 ? (
-            <div className="text-center py-20">
+            <div className="text-center py-20 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10">
               <Package className="w-20 h-20 mx-auto text-white/10 mb-4" />
               <p className="text-white/60 text-lg">No orders found</p>
+              <p className="text-white/40 text-sm mt-2">Orders will appear here when buyers make purchases</p>
             </div>
           ) : (
             filteredOrders.map((order, i) => (
@@ -237,50 +200,48 @@ export default function AdminOrders() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-teal-600 rounded-2xl flex items-center justify-center text-xl font-black text-white">
-                      {order.id.slice(3)}
+                      {order.id.substring(order.id.length - 3)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-white">{order.buyer}</h3>
-                      <p className="text-purple-300 text-sm">to {order.seller}</p>
+                      <h3 className="text-lg font-bold text-white">{order.buyerName}</h3>
+                      <p className="text-purple-300 text-sm">→ {order.sellerName}</p>
                     </div>
                   </div>
                   <div className={getStatusBadge(order.status)}>
                     {getStatusIcon(order.status)}
-                    {order.status.toUpperCase()}
+                    {order.status === "pending_confirmation"
+                      ? "PENDING"
+                      : order.status.toUpperCase()}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                   <div>
                     <p className="text-white/60">Order ID</p>
-                    <p className="text-white font-mono font-bold">{order.id}</p>
+                    <p className="text-white font-mono font-bold text-xs">{order.id}</p>
                   </div>
                   <div>
                     <p className="text-white/60 flex items-center gap-1">
-                      <Package className="w-4 h-4" /> Items
+                      <Shield className="w-4 h-4" /> Type
                     </p>
-                    <p className="text-white font-bold">{order.items}</p>
+                    <p className="text-white font-bold capitalize">{order.type}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-white/60 flex items-center justify-end gap-1">
-                      <Calendar className="w-4 h-4" /> Date
+                      <Calendar className="w-4 h-4" />
                     </p>
-                    <p className="text-white font-medium">{order.date}</p>
+                    <p className="text-white font-medium text-xs">
+                      {new Date(order.date).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-5">
+                <div className="flex items-center justify-between">
                   <p className="text-3xl font-black text-emerald-400">
-                    ₦{order.total.toLocaleString()}
+                    ₦{order.amount.toLocaleString()}
                   </p>
                   <ArrowRight className="w-6 h-6 text-white/40" />
                 </div>
-
-                {order.tracking && (
-                  <p className="text-white/60 text-sm mt-3 flex items-center gap-2">
-                    <Truck className="w-4 h-4" /> Tracking: {order.tracking}
-                  </p>
-                )}
               </motion.div>
             ))
           )}
@@ -289,3 +250,5 @@ export default function AdminOrders() {
     </>
   );
 }
+
+export default AdminOrders;

@@ -12,71 +12,76 @@ import {
   Calendar,
   Landmark,
   ArrowRight,
-  Package,
-  ShieldCheck,
   AlertTriangle,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export default function PayoutDetailPage() {
+interface WithdrawalRequest {
+  id: string;
+  sellerId: string;
+  sellerName: string;
+  amount: number;
+  date: string;
+  status: "pending" | "approved" | "completed" | "rejected";
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
+}
+
+function PayoutDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [payout, setPayout] = useState<any>(null);
-  const [seller, setSeller] = useState<any>(null);
-  const [bank, setBank] = useState<any>(null);
+  const [payout, setPayout] = useState<WithdrawalRequest | null>(null);
   const [releasing, setReleasing] = useState(false);
-  const [otherPayouts, setOtherPayouts] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const allPayouts = JSON.parse(localStorage.getItem("adminPayouts") || "[]");
-    const found = allPayouts.find((p: any) => p.id === id);
-    setPayout(found);
-
-    if (found) {
-      const sellerKey = `seller_${found.sellerId}`;
-      const savedSeller = localStorage.getItem(sellerKey);
-      if (savedSeller) {
-        const sellerData = JSON.parse(savedSeller);
-        setSeller(sellerData);
-
-        const bankKey = `bank_${found.sellerId}`;
-        const savedBank = localStorage.getItem(bankKey);
-        if (savedBank) setBank(JSON.parse(savedBank));
-      }
-
-      const sellerPayouts = allPayouts.filter((p: any) => p.sellerId === found.sellerId && p.id !== id);
-      setOtherPayouts(sellerPayouts);
-    }
+    setMounted(true);
+    const withdrawalRequests = JSON.parse(localStorage.getItem("withdrawalRequests") || "[]");
+    const found = withdrawalRequests.find((p: WithdrawalRequest) => p.id === id);
+    setPayout(found || null);
   }, [id]);
 
-  const handleReleasePayment = () => {
-    if (!payout || payout.status !== "pending" || !bank) return;
+  const handleApprove = () => {
+    if (!payout) return;
+
+    const withdrawalRequests = JSON.parse(localStorage.getItem("withdrawalRequests") || "[]");
+    const updated = withdrawalRequests.map((p: WithdrawalRequest) =>
+      p.id === payout.id ? { ...p, status: "approved" as const } : p
+    );
+    localStorage.setItem("withdrawalRequests", JSON.stringify(updated));
+    setPayout({ ...payout, status: "approved" });
+    alert("✓ Payment approved!");
+  };
+
+  const handleRelease = () => {
+    if (!payout || payout.status !== "approved") return;
 
     setReleasing(true);
-    setTimeout(() => {
-      const allPayouts = JSON.parse(localStorage.getItem("adminPayouts") || "[]");
-      const updatedPayouts = allPayouts.map((p: any) =>
-        p.id === payout.id ? { ...p, status: "completed" } : p
-      );
-      localStorage.setItem("adminPayouts", JSON.stringify(updatedPayouts));
 
-      if (seller) {
-        const updatedSeller = {
-          ...seller,
-          pendingPayout: Math.max(0, (seller.pendingPayout || 0) - payout.amount),
-        };
-        localStorage.setItem(`seller_${payout.sellerId}`, JSON.stringify(updatedSeller));
-        setSeller(updatedSeller);
-      }
+    setTimeout(() => {
+      // Update escrow balance
+      const currentEscrow = parseFloat(localStorage.getItem("walletInEscrow") || "0");
+      const newEscrow = Math.max(0, currentEscrow - payout.amount);
+      localStorage.setItem("walletInEscrow", newEscrow.toString());
+
+      // Update payout status
+      const withdrawalRequests = JSON.parse(localStorage.getItem("withdrawalRequests") || "[]");
+      const updated = withdrawalRequests.map((p: WithdrawalRequest) =>
+        p.id === payout.id ? { ...p, status: "completed" as const } : p
+      );
+      localStorage.setItem("withdrawalRequests", JSON.stringify(updated));
 
       setPayout({ ...payout, status: "completed" });
       setReleasing(false);
-      alert(`₦${payout.amount.toLocaleString()} released successfully`);
+      alert(`✓ ₦${payout.amount.toLocaleString()} released to ${payout.accountName}`);
+
+      setTimeout(() => router.push("/admin/payouts"), 1000);
     }, 1500);
   };
 
-  const getInitials = (name: string) => name?.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() || "??";
+  if (!mounted) return null;
 
   if (!payout) {
     return (
@@ -117,104 +122,171 @@ export default function PayoutDetailPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-7 text-white shadow-2xl"
+          className={`rounded-3xl p-7 text-white shadow-2xl bg-gradient-to-r ${
+            payout.status === "completed"
+              ? "from-emerald-500 to-teal-600"
+              : payout.status === "approved"
+              ? "from-blue-500 to-cyan-600"
+              : payout.status === "pending"
+              ? "from-amber-600 to-orange-600"
+              : "from-red-600 to-pink-600"
+          }`}
         >
-          <div className="flex items-center gap-3 mb-2">
-            <DollarSign className="w-8 h-8" />
-            <p className="text-lg font-bold">Payout Amount</p>
-          </div>
-          <p className="text-5xl font-black">₦{payout.amount.toLocaleString()}</p>
-          <div className="mt-4 flex items-center gap-3">
-            <div className={`px-5 py-2 rounded-full font-bold flex items-center gap-2 ${
-              payout.status === "pending"
-                ? "bg-amber-500/30 text-amber-300 border border-amber-500/50"
-                : payout.status === "completed"
-                ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/50"
-                : "bg-red-500/30 text-red-300 border border-red-500/50"
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-lg font-bold flex items-center gap-2">
+                <DollarSign className="w-7 h-7" /> Payout Amount
+              </p>
+              <p className="text-5xl font-black mt-2">₦{payout.amount.toLocaleString()}</p>
+            </div>
+            <div className={`px-6 py-3 rounded-full font-black text-lg flex items-center gap-3 ${
+              payout.status === "completed" ? "bg-white/20" :
+              payout.status === "approved" ? "bg-white/20" :
+              payout.status === "pending" ? "bg-white/20" :
+              "bg-white/20"
             }`}>
-              {payout.status === "pending" && <Clock className="w-5 h-5" />}
-              {payout.status === "completed" && <CheckCircle className="w-5 h-5" />}
-              {payout.status === "failed" && <AlertTriangle className="w-5 h-5" />}
+              {payout.status === "pending" && <Clock className="w-6 h-6" />}
+              {payout.status === "approved" && <CheckCircle className="w-6 h-6" />}
+              {payout.status === "completed" && <CheckCircle className="w-6 h-6" />}
+              {payout.status === "rejected" && <AlertTriangle className="w-6 h-6" />}
               {payout.status.toUpperCase()}
             </div>
           </div>
         </motion.div>
 
-        {/* SELLER */}
-        {seller && (
-          <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-teal-600 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-2xl">
-                {getInitials(seller.name)}
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-black text-white">{seller.name}</h2>
-                <p className="text-purple-300 text-lg flex items-center gap-2 mt-1">
-                  <User className="w-5 h-5" /> {seller.email}
-                </p>
-                <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
-                  <div>
-                    <p className="text-white/60">Joined</p>
-                    <p className="text-white font-bold">{seller.joinDate}</p>
-                  </div>
-                  <div>
-                    <p className="text-white/60 flex items-center gap-1">
-                      <Package className="w-5 h-5" /> Products
-                    </p>
-                    <p className="text-white font-bold">{seller.totalProducts}</p>
-                  </div>
-                </div>
+        {/* STATUS INFO */}
+        {payout.status === "pending" && (
+          <motion.div className="bg-amber-500/20 border border-amber-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <Clock className="w-6 h-6 text-amber-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Awaiting Your Approval</p>
+                <p className="text-amber-300 text-sm mt-1">Review the withdrawal and approve to proceed</p>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* BANK */}
-        <motion.div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+        {payout.status === "approved" && (
+          <motion.div className="bg-blue-500/20 border border-blue-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Ready to Release</p>
+                <p className="text-blue-300 text-sm mt-1">Click "Release Payment" to transfer funds to seller's bank account</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {payout.status === "completed" && (
+          <motion.div className="bg-emerald-500/20 border border-emerald-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Payment Released</p>
+                <p className="text-emerald-300 text-sm mt-1">Funds have been transferred to seller's account</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {payout.status === "rejected" && (
+          <motion.div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-5 backdrop-blur-xl">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
+              <div>
+                <p className="text-white font-bold">Withdrawal Rejected</p>
+                <p className="text-red-300 text-sm mt-1">This withdrawal request was rejected</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SELLER INFO */}
+        <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <User className="w-6 h-6 text-purple-400" /> Seller
+          </h3>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-teal-600 rounded-2xl flex items-center justify-center text-2xl font-black text-white">
+              {payout.sellerName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </div>
+            <div>
+              <p className="text-white font-bold text-xl">{payout.sellerName}</p>
+              <p className="text-purple-300 text-sm font-mono mt-1">ID: {payout.sellerId}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* BANK DETAILS */}
+        <motion.div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
           <div className="flex items-center gap-3 mb-5">
             <Landmark className="w-7 h-7 text-purple-400" />
-            <h3 className="text-xl font-black text-white">Bank Details</h3>
-            {bank && <CheckCircle className="w-7 h-7 text-emerald-400 ml-auto" />}
+            <h3 className="text-lg font-bold text-white">Bank Details</h3>
+            {payout.bankName && <CheckCircle className="w-7 h-7 text-emerald-400 ml-auto" />}
           </div>
-          {bank ? (
+          {payout.bankName ? (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-white/60 text-sm">Bank</p>
-                  <p className="text-white font-bold text-lg">{bank.bankName}</p>
+                  <p className="text-white font-bold text-lg">{payout.bankName}</p>
                 </div>
                 <div>
                   <p className="text-white/60 text-sm">Account Name</p>
-                  <p className="text-white font-bold text-lg">{bank.accountName}</p>
+                  <p className="text-white font-bold text-lg">{payout.accountName}</p>
                 </div>
               </div>
               <div>
                 <p className="text-white/60 text-sm">Account Number</p>
-                <p className="text-white font-mono text-2xl tracking-wider">{bank.accountNumber}</p>
+                <p className="text-white font-mono text-2xl tracking-wider">{payout.accountNumber}</p>
+              </div>
+              <div>
+                <p className="text-white/60 text-sm flex items-center gap-1">
+                  <Calendar className="w-4 h-4" /> Requested
+                </p>
+                <p className="text-white font-medium">{new Date(payout.date).toLocaleString()}</p>
               </div>
             </div>
           ) : (
-            <p className="text-white/60 text-center py-8">No bank details</p>
+            <p className="text-white/60 text-center py-8">No bank details provided</p>
           )}
         </motion.div>
 
-        {/* RELEASE BUTTON */}
+        {/* ACTION BUTTONS */}
         {payout.status === "pending" && (
-          <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-xl z-50">
+          <div className="flex gap-3 pt-4">
             <button
-              onClick={handleReleasePayment}
-              disabled={!bank || releasing}
-              className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center justify-center gap-3 ${
-                bank && !releasing
-                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/50"
-                  : "bg-white/20 text-white/50"
+              onClick={handleApprove}
+              className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-blue-500/50 transition"
+            >
+              Approve Payment
+            </button>
+          </div>
+        )}
+
+        {payout.status === "approved" && (
+          <motion.div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent backdrop-blur-xl z-50">
+            <button
+              onClick={handleRelease}
+              disabled={releasing}
+              className={`w-full py-5 rounded-2xl font-black text-xl shadow-2xl flex items-center justify-center gap-3 transition ${
+                releasing
+                  ? "bg-white/20 text-white/50"
+                  : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/50"
               }`}
             >
               {releasing ? "Releasing..." : <>Release ₦{payout.amount.toLocaleString()}</>}
             </button>
-          </div>
+          </motion.div>
         )}
       </div>
     </>
   );
 }
+
+export default PayoutDetailPage;

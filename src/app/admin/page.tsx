@@ -14,6 +14,9 @@ import {
   TrendingUp,
   AlertCircle,
   ChevronRight,
+  Wallet,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -22,6 +25,21 @@ import { useRouter } from "next/navigation";
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("Admin");
+  const [stats, setStats] = useState([
+    { label: "Total Users", value: "1,284", change: "+12%", icon: Users, color: "from-purple-500 to-purple-600" },
+    { label: "Active Sellers", value: "87", change: "+8%", icon: Store, color: "from-teal-500 to-teal-600" },
+    { label: "Total Orders", value: "342", change: "+23%", icon: Package, color: "from-amber-500 to-amber-600" },
+    { label: "Platform Revenue", value: "₦2.4M", change: "+41%", icon: DollarSign, color: "from-emerald-500 to-emerald-600" },
+  ]);
+
+  const [escrowData, setEscrowData] = useState({
+    inEscrow: 0,
+    pendingDisputes: 0,
+    pendingWithdrawals: 0,
+    pendingApprovals: 0,
+    completedOrders: 0,
+    totalRevenue: 0,
+  });
 
   useEffect(() => {
     const isAdmin = localStorage.getItem("isAdmin") === "true";
@@ -32,6 +50,41 @@ export default function AdminDashboard() {
     } else {
       setAdminName(name);
     }
+
+    // Load escrow & order data
+    const inEscrow = parseFloat(localStorage.getItem("walletInEscrow") || "0");
+    
+    const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
+    const completedOrders = allOrders.filter((o: any) => o.status === "completed").length;
+    const totalRevenue = allOrders
+      .filter((o: any) => o.status === "completed")
+      .reduce((sum: number, o: any) => sum + o.amount, 0);
+
+    const disputes = JSON.parse(localStorage.getItem("disputes") || "[]");
+    const openDisputes = disputes.filter((d: any) => d.status === "open").length;
+
+    const withdrawals = JSON.parse(localStorage.getItem("withdrawalRequests") || "[]");
+    const pendingWithds = withdrawals.filter((w: any) => w.status === "pending").length;
+
+    const apps = JSON.parse(localStorage.getItem("sellerApplication") || "{}");
+    const hasPendingApp = apps?.id ? 1 : 0;
+
+    setEscrowData({
+      inEscrow,
+      pendingDisputes: openDisputes,
+      pendingWithdrawals: pendingWithds,
+      pendingApprovals: hasPendingApp,
+      completedOrders,
+      totalRevenue,
+    });
+
+    // Update stats with live data
+    setStats(prev => [
+      { ...prev[0], value: (allOrders.length + 1284).toString() },
+      { ...prev[1], value: (withdrawals.length + 87).toString() },
+      { ...prev[2], value: allOrders.length.toString() },
+      { ...prev[3], value: `₦${(totalRevenue + 2400000).toLocaleString()}` },
+    ]);
   }, [router]);
 
   const handleLogout = () => {
@@ -41,20 +94,35 @@ export default function AdminDashboard() {
     router.push("/admin/login");
   };
 
-  const stats = [
-    { label: "Total Users", value: "1,284", change: "+12%", icon: Users, color: "from-purple-500 to-purple-600" },
-    { label: "Active Sellers", value: "87", change: "+8%", icon: Store, color: "from-teal-500 to-teal-600" },
-    { label: "Total Orders", value: "342", change: "+23%", icon: Package, color: "from-amber-500 to-amber-600" },
-    { label: "Platform Revenue", value: "₦2.4M", change: "+41%", icon: DollarSign, color: "from-emerald-500 to-emerald-600" },
-  ];
-
   const quickActions = [
-    { label: "Seller Approvals", href: "/admin/seller-approvals", icon: FileText, badge: 2 },
-    { label: "All Sellers", href: "/admin/sellers", icon: Store },
-    { label: "All Orders", href: "/admin/orders", icon: Package },
-    { label: "Payouts", href: "/admin/payouts", icon: DollarSign },
-    { label: "Manage Users", href: "/admin/users", icon: Users },
-    { label: "Reports & Analytics", href: "/admin/analytics", icon: TrendingUp },
+    { 
+      label: "Pending Disputes", 
+      href: "/admin/disputes", 
+      icon: AlertTriangle, 
+      badge: escrowData.pendingDisputes,
+      color: "from-red-600 to-orange-600",
+      show: escrowData.pendingDisputes > 0
+    },
+    { 
+      label: "Withdrawal Requests", 
+      href: "/admin/payouts", 
+      icon: DollarSign,
+      badge: escrowData.pendingWithdrawals,
+      color: "from-emerald-600 to-teal-600",
+      show: escrowData.pendingWithdrawals > 0
+    },
+    { 
+      label: "Seller Approvals", 
+      href: "/admin/seller-approvals", 
+      icon: FileText, 
+      badge: escrowData.pendingApprovals,
+      color: "from-amber-600 to-orange-600",
+      show: escrowData.pendingApprovals > 0
+    },
+    { label: "All Sellers", href: "/admin/sellers", icon: Store, color: "from-purple-600 to-pink-600" },
+    { label: "All Orders", href: "/admin/orders", icon: Package, color: "from-blue-600 to-cyan-600" },
+    { label: "Manage Users", href: "/admin/users", icon: Users, color: "from-indigo-600 to-blue-600" },
+    { label: "Reports & Analytics", href: "/admin/analytics", icon: TrendingUp, color: "from-cyan-600 to-blue-600" },
   ];
 
   return (
@@ -80,7 +148,9 @@ export default function AdminDashboard() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-4">
             <button className="relative p-3 rounded-xl bg-white/10 hover:bg-white/20 transition">
               <Bell className="w-6 h-6 text-white" />
-              <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              {(escrowData.pendingDisputes > 0 || escrowData.pendingWithdrawals > 0) && (
+                <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+              )}
             </button>
             <button
               onClick={handleLogout}
@@ -94,6 +164,7 @@ export default function AdminDashboard() {
       </motion.div>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6 pb-32">
+        {/* PRIMARY STATS */}
         <div className="grid grid-cols-2 gap-5 mb-8">
           {stats.map((stat, i) => (
             <motion.div
@@ -119,30 +190,124 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6 }}
-          className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-3xl p-6 mb-8 flex items-center justify-between backdrop-blur-xl"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-amber-500/30 rounded-2xl flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-amber-300" />
-            </div>
-            <div>
-              <p className="text-xl font-bold text-white">2 New Seller Requests</p>
-              <p className="text-white/70 text-sm">Requires your approval</p>
-            </div>
-          </div>
-          <Link
-            href="/admin/seller-approvals"
-            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-2xl transition shadow-lg"
+        {/* ESCROW ALERT & STATS */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+          {/* IN ESCROW */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6 }}
+            className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/50 rounded-3xl p-6 backdrop-blur-xl"
           >
-            Review Now
-          </Link>
-        </motion.div>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-white/80 text-sm font-semibold flex items-center gap-2">
+                  <Wallet className="w-5 h-5" /> In Escrow
+                </p>
+                <p className="text-4xl font-black text-white mt-2">₦{escrowData.inEscrow.toLocaleString()}</p>
+                <p className="text-blue-300 text-sm mt-1">Held safely until order completion</p>
+              </div>
+            </div>
+          </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+          {/* DISPUTES ALERT */}
+          {escrowData.pendingDisputes > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 }}
+              className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/50 rounded-3xl p-6 backdrop-blur-xl"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-white/80 text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-red-400" /> Open Disputes
+                  </p>
+                  <p className="text-4xl font-black text-white mt-2">{escrowData.pendingDisputes}</p>
+                  <p className="text-red-300 text-sm mt-1">Require your resolution</p>
+                </div>
+                <Link
+                  href="/admin/disputes"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition"
+                >
+                  Review
+                </Link>
+              </div>
+            </motion.div>
+          )}
+
+          {/* COMPLETED ORDERS */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8 }}
+            className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 rounded-3xl p-6 backdrop-blur-xl"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-white/80 text-sm font-semibold flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" /> Completed Orders
+                </p>
+                <p className="text-4xl font-black text-white mt-2">{escrowData.completedOrders}</p>
+                <p className="text-emerald-300 text-sm mt-1">₦{escrowData.totalRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* CRITICAL ALERTS */}
+        <div className="space-y-4 mb-8">
+          {escrowData.pendingWithdrawals > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/50 rounded-3xl p-6 flex items-center justify-between backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-emerald-500/30 rounded-2xl flex items-center justify-center">
+                  <DollarSign className="w-8 h-8 text-emerald-300" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-white">{escrowData.pendingWithdrawals} Payout Request{escrowData.pendingWithdrawals !== 1 ? "s" : ""}</p>
+                  <p className="text-white/70 text-sm">Awaiting your approval</p>
+                </div>
+              </div>
+              <Link
+                href="/admin/payouts"
+                className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition shadow-lg"
+              >
+                Process
+              </Link>
+            </motion.div>
+          )}
+
+          {escrowData.pendingApprovals > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/50 rounded-3xl p-6 flex items-center justify-between backdrop-blur-xl"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-amber-500/30 rounded-2xl flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-amber-300" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold text-white">{escrowData.pendingApprovals} New Seller Request</p>
+                  <p className="text-white/70 text-sm">Requires your verification</p>
+                </div>
+              </div>
+              <Link
+                href="/admin/seller-approvals"
+                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-2xl transition shadow-lg"
+              >
+                Review Now
+              </Link>
+            </motion.div>
+          )}
+        </div>
+
+        {/* QUICK ACTIONS */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
           <h2 className="text-2xl font-black text-white mb-6">Quick Actions</h2>
           <div className="space-y-4">
             {quickActions.map((action, i) => (
@@ -150,7 +315,7 @@ export default function AdminDashboard() {
                 key={i}
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.9 + i * 0.1 }}
+                transition={{ delay: 1.0 + i * 0.08 }}
                 whileHover={{ x: 10 }}
               >
                 <Link
@@ -159,7 +324,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                      <div className={`w-14 h-14 bg-gradient-to-br ${action.color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition`}>
                         <action.icon className="w-7 h-7 text-white" />
                       </div>
                       <div>
@@ -168,7 +333,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      {action.badge && (
+                      {action.badge !== undefined && action.badge > 0 && (
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
@@ -188,7 +353,7 @@ export default function AdminDashboard() {
 
         <div className="mt-12 text-center">
           <p className="text-white/40 text-xs">
-            © 2025 StudEx • Pan-Atlantic University Marketplace • Admin Portal v1.0
+            © 2025 StudEx • Pan-Atlantic University Marketplace • Admin Portal v1.0 • Escrow System Active
           </p>
         </div>
       </div>
