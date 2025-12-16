@@ -1,57 +1,35 @@
 // src/app/wallet/fund/page.tsx
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Wallet, CreditCard, Shield, Zap, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-
-const PaystackHook = dynamic(
-  () => import("react-paystack").then((mod) => mod.usePaystackPayment),
-  { ssr: false }
-);
 
 export default function FundWalletPage() {
   const router = useRouter();
   const [amount, setAmount] = useState("");
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
-  const [isPaystackReady, setIsPaystackReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentBalance, setCurrentBalance] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [paystackConfigured, setPaystackConfigured] = useState(false);
 
   const quickAmounts = [1000, 2000, 5000, 10000, 20000, 50000];
 
-  const amountInKobo = (selectedAmount || parseInt(amount) || 0) * 100;
-
-  const config = {
-    reference: new Date().getTime().toString(),
-    email: "user@studex.com",
-    amount: amountInKobo,
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
-  };
-
-  const initializePaymentRef = useRef<any>(null);
-
   useEffect(() => {
+    setMounted(true);
     // Load current wallet balance
     const balance = localStorage.getItem("walletBalance");
     setCurrentBalance(balance ? parseFloat(balance) : 0);
+    
+    // Check if Paystack is configured
+    const key = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    setPaystackConfigured(!!key && key !== 'your_paystack_public_key_here');
+  }, []);
 
-    // Load Paystack
-    const loadPaystack = async () => {
-      if (typeof window === "undefined") return;
-      const PaystackFunction = await import("react-paystack").then(
-        (mod) => mod.usePaystackPayment
-      );
-      initializePaymentRef.current = PaystackFunction(config);
-      setIsPaystackReady(true);
-    };
-    loadPaystack();
-  }, [amountInKobo]);
-
-  const handlePayment = useCallback(() => {
+  const handlePayment = () => {
     const finalAmount = selectedAmount || parseInt(amount);
     
     if (!finalAmount || finalAmount < 100) {
@@ -59,45 +37,87 @@ export default function FundWalletPage() {
       return;
     }
 
-    if (!isPaystackReady || !initializePaymentRef.current) {
-      alert("Payment system loading...");
+    if (!mounted) {
+      alert("Please wait...");
+      return;
+    }
+
+    // Check if Paystack key is configured
+    const paystackKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+    
+    if (!paystackKey || paystackKey === 'your_paystack_public_key_here') {
+      alert("⚠️ Payment system not configured. Please add your Paystack public key to .env.local file.\n\nFor testing, you can get a test key from https://dashboard.paystack.com");
       return;
     }
 
     setIsProcessing(true);
 
-    initializePaymentRef.current({
-      onSuccess: (reference: any) => {
-        // Add amount to wallet balance
-        const newBalance = currentBalance + finalAmount;
-        localStorage.setItem("walletBalance", newBalance.toString());
-        
-        // Save transaction
-        const transactions = JSON.parse(localStorage.getItem("walletTransactions") || "[]");
-        transactions.push({
-          id: reference.reference,
-          type: "credit",
-          amount: finalAmount,
-          date: new Date().toISOString(),
-          status: "success",
-          description: "Wallet funded via card"
-        });
-        localStorage.setItem("walletTransactions", JSON.stringify(transactions));
+    // Load Paystack script dynamically
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    
+    script.onload = () => {
+      // @ts-ignore - Paystack is loaded globally
+      const handler = window.PaystackPop.setup({
+        key: paystackKey,
+        email: "user@studex.com",
+        amount: finalAmount * 100, // Convert to kobo
+        currency: "NGN",
+        ref: `STUDEX_${new Date().getTime()}`,
+        onClose: function() {
+          setIsProcessing(false);
+          alert("Payment cancelled");
+        },
+        callback: function(response: any) {
+          // Add amount to wallet balance
+          const newBalance = currentBalance + finalAmount;
+          localStorage.setItem("walletBalance", newBalance.toString());
+          
+          // Save transaction
+          const transactions = JSON.parse(localStorage.getItem("walletTransactions") || "[]");
+          transactions.push({
+            id: response.reference,
+            type: "credit",
+            amount: finalAmount,
+            date: new Date().toISOString(),
+            status: "success",
+            description: "Wallet funded via card"
+          });
+          localStorage.setItem("walletTransactions", JSON.stringify(transactions));
 
-        alert(`Success! ₦${finalAmount.toLocaleString()} added to your wallet`);
-        router.push("/account");
-      },
-      onClose: () => {
-        setIsProcessing(false);
-        alert("Payment cancelled");
-      },
-    });
-  }, [isPaystackReady, amount, selectedAmount, currentBalance, router]);
+          setIsProcessing(false);
+          alert(`Success! ₦${finalAmount.toLocaleString()} added to your wallet`);
+          router.push("/account");
+        }
+      });
+      
+      handler.openIframe();
+    };
+
+    script.onerror = () => {
+      setIsProcessing(false);
+      alert("Failed to load payment system. Please try again.");
+    };
+
+    document.body.appendChild(script);
+  };
 
   const selectQuickAmount = (amt: number) => {
     setSelectedAmount(amt);
     setAmount(amt.toString());
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50 flex items-center justify-center">
+        <div className="text-center">
+          <Wallet className="w-16 h-16 text-purple-600 mx-auto mb-4 animate-pulse" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-teal-50">
@@ -199,6 +219,14 @@ export default function FundWalletPage() {
           transition={{ delay: 0.3 }}
           className="bg-white rounded-2xl p-6 shadow-lg"
         >
+          {!paystackConfigured && (
+            <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-xl">
+              <p className="text-xs font-bold text-yellow-800 mb-1">⚠️ Setup Required</p>
+              <p className="text-xs text-yellow-700">
+                Add your Paystack public key to <code className="bg-yellow-200 px-1 rounded">.env.local</code>
+              </p>
+            </div>
+          )}
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
               <CreditCard className="w-6 h-6 text-purple-600" />
@@ -243,9 +271,9 @@ export default function FundWalletPage() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handlePayment}
-          disabled={!isPaystackReady || isProcessing || (!selectedAmount && !amount)}
+          disabled={isProcessing || (!selectedAmount && !amount)}
           className={`w-full py-5 rounded-2xl font-black text-xl text-white shadow-2xl flex items-center justify-center gap-3 ${
-            !isPaystackReady || isProcessing || (!selectedAmount && !amount)
+            isProcessing || (!selectedAmount && !amount)
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-gradient-to-r from-purple-600 to-teal-600"
           }`}
@@ -259,11 +287,6 @@ export default function FundWalletPage() {
                 <Wallet className="w-6 h-6" />
               </motion.div>
               Processing...
-            </>
-          ) : !isPaystackReady ? (
-            <>
-              <Shield className="w-6 h-6" />
-              Loading Secure Payment...
             </>
           ) : (
             <>
